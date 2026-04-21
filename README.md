@@ -66,17 +66,36 @@ Works with **any language** that has an ISO 639-1 code. Built-in AI cliché dete
 
 ## Installation
 
-### Via PyPI (recommended)
+No manual install required — run it straight from GitHub with `uvx`:
 
 ```bash
-pip install seo-echo-mcp
-# or
-uv pip install seo-echo-mcp
+uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
 ```
 
-### Via uvx (no install)
+`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.2.0` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
 
-Configure your IDE to run `uvx seo-echo-mcp` directly — no manual install needed.
+<details>
+<summary>Other installation methods</summary>
+
+**Persistent pip install (no PyPI):**
+
+```bash
+pip install git+https://github.com/canberkys/seo-echo-mcp
+# or with uv:
+uv pip install git+https://github.com/canberkys/seo-echo-mcp
+```
+
+**Local clone for development:**
+
+```bash
+git clone https://github.com/canberkys/seo-echo-mcp && cd seo-echo-mcp
+uv sync --extra dev
+uv run seo-echo-mcp   # stdio server for testing
+```
+
+**From PyPI:** not published yet. Track [issue #TBD](https://github.com/canberkys/seo-echo-mcp/issues) for PyPI release.
+
+</details>
 
 ## IDE Setup
 
@@ -86,7 +105,7 @@ Click the IDE you use to expand setup instructions.
 <summary><b>Claude Code</b></summary>
 
 ```bash
-claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
+claude mcp add seo-echo --scope user -- uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
 ```
 
 Then in any Claude Code session, type `/mcp` — you should see `seo-echo ✓ Connected`.
@@ -103,7 +122,11 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
   "mcpServers": {
     "seo-echo": {
       "command": "uvx",
-      "args": ["seo-echo-mcp"]
+      "args": [
+        "--from",
+        "git+https://github.com/canberkys/seo-echo-mcp",
+        "seo-echo-mcp"
+      ]
     }
   }
 }
@@ -123,7 +146,11 @@ Create `.cursor/mcp.json` in your project root (or `~/.cursor/mcp.json` for a gl
   "mcpServers": {
     "seo-echo": {
       "command": "uvx",
-      "args": ["seo-echo-mcp"]
+      "args": [
+        "--from",
+        "git+https://github.com/canberkys/seo-echo-mcp",
+        "seo-echo-mcp"
+      ]
     }
   }
 }
@@ -143,7 +170,11 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
   "mcpServers": {
     "seo-echo": {
       "command": "uvx",
-      "args": ["seo-echo-mcp"]
+      "args": [
+        "--from",
+        "git+https://github.com/canberkys/seo-echo-mcp",
+        "seo-echo-mcp"
+      ]
     }
   }
 }
@@ -163,7 +194,11 @@ Create `.vscode/mcp.json` in your workspace:
   "servers": {
     "seo-echo": {
       "command": "uvx",
-      "args": ["seo-echo-mcp"]
+      "args": [
+        "--from",
+        "git+https://github.com/canberkys/seo-echo-mcp",
+        "seo-echo-mcp"
+      ]
     }
   }
 }
@@ -184,7 +219,11 @@ Add to `~/.config/zed/settings.json`:
     "seo-echo": {
       "command": {
         "path": "uvx",
-        "args": ["seo-echo-mcp"]
+        "args": [
+          "--from",
+          "git+https://github.com/canberkys/seo-echo-mcp",
+          "seo-echo-mcp"
+        ]
       }
     }
   }
@@ -194,6 +233,8 @@ Add to `~/.config/zed/settings.json`:
 Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
 
 </details>
+
+> **Tip:** To pin a specific release add `@v0.2.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.2.0`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
 
 > **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
