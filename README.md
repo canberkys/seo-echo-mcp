@@ -72,7 +72,7 @@ No manual install required — run it straight from GitHub with `uvx`:
 uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
 ```
 
-`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.2.0` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
+`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.2.1` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
 
 <details>
 <summary>Other installation methods</summary>
@@ -234,7 +234,7 @@ Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
 
 </details>
 
-> **Tip:** To pin a specific release add `@v0.2.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.2.0`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
+> **Tip:** To pin a specific release add `@v0.2.1` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.2.1`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
 
 > **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
