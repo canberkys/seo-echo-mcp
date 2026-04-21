@@ -5,7 +5,8 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
-[![PyPI](https://img.shields.io/pypi/v/seo-echo-mcp)](https://pypi.org/project/seo-echo-mcp/)
+[![Test](https://github.com/canberkys/seo-echo-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/canberkys/seo-echo-mcp/actions/workflows/test.yml)
+[![GitHub release](https://img.shields.io/github/v/release/canberkys/seo-echo-mcp)](https://github.com/canberkys/seo-echo-mcp/releases)
 
 [Features](#features) • [Installation](#installation) • [IDE Setup](#ide-setup) • [API Reference](#api-reference) • [Contributing](#contributing)
 
@@ -79,30 +80,23 @@ Configure your IDE to run `uvx seo-echo-mcp` directly — no manual install need
 
 ## IDE Setup
 
-### Claude Code
+Click the IDE you use to expand setup instructions.
+
+<details>
+<summary><b>Claude Code</b></summary>
 
 ```bash
 claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
 ```
 
-### Claude Desktop
+Then in any Claude Code session, type `/mcp` — you should see `seo-echo ✓ Connected`.
 
-`claude_desktop_config.json`:
+</details>
 
-```json
-{
-  "mcpServers": {
-    "seo-echo": {
-      "command": "uvx",
-      "args": ["seo-echo-mcp"]
-    }
-  }
-}
-```
+<details>
+<summary><b>Claude Desktop</b></summary>
 
-### Cursor
-
-`.cursor/mcp.json`:
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 
 ```json
 {
@@ -115,9 +109,14 @@ claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
 }
 ```
 
-### Windsurf
+Restart Claude Desktop. The tools appear under the 🔌 icon.
 
-`~/.codeium/windsurf/mcp_config.json`:
+</details>
+
+<details>
+<summary><b>Cursor</b></summary>
+
+Create `.cursor/mcp.json` in your project root (or `~/.cursor/mcp.json` for a global install):
 
 ```json
 {
@@ -130,9 +129,34 @@ claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
 }
 ```
 
-### VS Code (GitHub Copilot)
+Reload Cursor (`Cmd/Ctrl + Shift + P` → `Developer: Reload Window`).
 
-`.vscode/mcp.json`:
+</details>
+
+<details>
+<summary><b>Windsurf</b></summary>
+
+Edit `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "seo-echo": {
+      "command": "uvx",
+      "args": ["seo-echo-mcp"]
+    }
+  }
+}
+```
+
+Restart Windsurf.
+
+</details>
+
+<details>
+<summary><b>VS Code (GitHub Copilot)</b></summary>
+
+Create `.vscode/mcp.json` in your workspace:
 
 ```json
 {
@@ -145,9 +169,14 @@ claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
 }
 ```
 
-### Zed
+Reload VS Code and confirm via the Copilot Chat settings.
 
-`~/.config/zed/settings.json`:
+</details>
+
+<details>
+<summary><b>Zed</b></summary>
+
+Add to `~/.config/zed/settings.json`:
 
 ```json
 {
@@ -161,6 +190,12 @@ claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
   }
 }
 ```
+
+Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
+
+</details>
+
+> **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
 ## API Reference
 
