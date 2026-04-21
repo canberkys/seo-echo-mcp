@@ -1,6 +1,6 @@
 """FastMCP entry point for seo-echo-mcp.
 
-Registers the four public tools and exposes `main()` as the stdio CLI entry.
+Registers all 14 public tools and exposes `main()` as the stdio CLI entry.
 
 Logging is configured here to write to **stderr only** — stdout is reserved for
 the MCP stdio protocol. Level can be overridden via the `SEO_ECHO_LOG_LEVEL`
@@ -48,12 +48,14 @@ _configure_logging()
 mcp = FastMCP(
     name="seo-echo-mcp",
     instructions=(
-        "Voice-preserving SEO content workflow. Typical chain: "
+        "Voice-preserving SEO content workflow (14 tools). Typical chain: "
         "analyze_site → analyze_competitors → detect_content_gaps → check_duplicates → "
         "suggest_titles → generate_outline → generate_faq_section → generate_schema_jsonld → "
         "prepare_draft_skeleton → [host LLM fills the skeleton and saves the .md] → "
-        "audit_content → readability_report. generate_slug and generate_meta_variations are "
-        "on-demand helpers. No external LLM/API calls are made inside these tools."
+        "audit_content → readability_report → suggest_image_alts. "
+        "generate_slug and generate_meta_variations are on-demand helpers. "
+        "analyze_site supports an explicit `urls` list plus a 24h persistent cache. "
+        "No external LLM/API calls are made inside these tools."
     ),
 )
 

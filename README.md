@@ -1,6 +1,6 @@
 # seo-echo-mcp
 
-**Voice-preserving SEO content MCP server — language-agnostic.**
+**Voice-preserving SEO content MCP server — 14 rule-based tools, language-agnostic, no external LLM calls.**
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -283,7 +283,7 @@ Runs 16 rule-based checks (word count, H2 format, em-dash usage, AI clichés, ke
 
 ## Content Creation Workflow with Claude Code
 
-Because every tool is rule/template-based, the **host LLM (Claude) writes the prose** — the MCP just builds the scaffolding. A single prompt can chain all 13 tools:
+Because every tool is rule/template-based, the **host LLM (Claude) writes the prose** — the MCP just builds the scaffolding. A single prompt can chain all 14 tools:
 
 > *"Analyze `myblog.com`, research competitors for `async python`, check if I already wrote about it, get a draft skeleton with FAQ + Article JSON-LD, fill the skeleton in my voice and save it as `content/async-python.md`, then audit + score readability."*
 
@@ -301,7 +301,8 @@ Claude will:
 10. **Claude fills every directive** in your voice, respecting word count, addressing ("you"/"sen"/"vous"…), em-dash policy, etc.
 11. Claude saves the filled markdown via its `Write` tool → `content/async-python.md`
 12. `audit_content(draft, site, target_keyword)` → `AuditReport` (score + fixes)
-13. `readability_report(draft, language)` → Flesch/Ateşman/Fernández-Huerta score
+13. `readability_report(draft, language)` → Flesch/Ateşman/Fernández-Huerta score + passive voice (EN/TR/DE)
+14. `suggest_image_alts(draft, target_keyword)` → flags missing/weak alt text and proposes replacements
 
 You end up with a publishable `.md` that matches your blog's voice, passes SEO checks, and has schema markup ready to paste into `<head>`.
 
