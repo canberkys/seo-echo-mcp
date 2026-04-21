@@ -83,42 +83,50 @@ def _build_sections(
     per_section = max(150, total_words // n)
 
     template_pool = tpl.H2_TEMPLATES.get(h2_style, tpl.H2_TEMPLATES["statement"])
-    keyword_title = keyword.title() if keyword.islower() else keyword
+    # Preserve user-supplied casing — users write "VMware vMotion" correctly;
+    # `.title()` would produce "Vmware Vmotion".
+    keyword_display = keyword
 
     comp_topics = comp.insights.common_h2_topics if comp and comp.insights else []
     topic_iter = iter(comp_topics)
 
     purposes = _purposes_for(n)
     sections: list[OutlineSection] = []
+    used_h2s: set[str] = set()
     for i in range(n):
         purpose = purposes[i]
         if purpose == "introduction":
-            h2 = template_pool[0].format(Keyword=keyword_title, Year=_year())
+            h2 = template_pool[0].format(Keyword=keyword_display, Year=_year())
             must_cover = [
                 f"Define {keyword}",
                 "Why it matters right now",
                 "Who this article is for",
             ]
         elif purpose == "summary":
-            h2 = _summary_h2(h2_style, keyword_title)
+            h2 = _summary_h2(h2_style, keyword_display)
             must_cover = ["Key takeaways", "Next action for the reader"]
         else:
             topic = next(topic_iter, None)
             if topic:
-                h2 = _format_h2(h2_style, f"{keyword_title} and {topic}")
+                h2 = _format_h2(h2_style, f"{keyword_display} and {topic}")
                 must_cover = [
                     f"Explain the role of {topic} in {keyword}",
                     "Concrete examples",
                     "Common pitfalls",
                 ]
             else:
-                tmpl = template_pool[(i) % len(template_pool)]
-                h2 = tmpl.format(Keyword=keyword_title, Year=_year())
+                h2 = _pick_unused_template(
+                    template_pool, keyword_display, used_h2s
+                ) or _synthetic_h2(h2_style, keyword_display, i, used_h2s)
                 must_cover = [
                     f"Core concept around {keyword}",
                     "Practical application",
                     "Example or case",
                 ]
+        # Final dedup guard — try alternate synthetic variants before giving up
+        if h2 in used_h2s:
+            h2 = _synthetic_h2(h2_style, keyword_display, i, used_h2s)
+        used_h2s.add(h2)
         sections.append(
             OutlineSection(
                 h2=h2,
@@ -129,6 +137,52 @@ def _build_sections(
             )
         )
     return sections
+
+
+def _pick_unused_template(pool: list[str], keyword: str, used: set[str]) -> str | None:
+    for tmpl in pool:
+        candidate = tmpl.format(Keyword=keyword, Year=_year())
+        if candidate not in used:
+            return candidate
+    return None
+
+
+def _synthetic_h2(style: str, keyword: str, index: int, used: set[str] | None = None) -> str:
+    """Fallback H2 when the template pool is exhausted.
+
+    Walks a 12-variant pool and returns the first candidate not already in
+    `used`. Falls back to a numbered suffix only if every variant collides.
+    """
+    variants = [
+        f"{keyword} in practice",
+        f"Real-world {keyword} scenarios",
+        f"{keyword} patterns to know",
+        f"Common {keyword} pitfalls",
+        f"{keyword} tips and tricks",
+        f"Advanced {keyword} techniques",
+        f"{keyword} best practices",
+        f"Troubleshooting {keyword} issues",
+        f"{keyword} in production",
+        f"Optimizing {keyword} performance",
+        f"{keyword} use cases",
+        f"Comparing {keyword} approaches",
+    ]
+    for offset in range(len(variants)):
+        base = variants[(index + offset) % len(variants)]
+        styled = _apply_h2_style(style, base)
+        if used is None or styled not in used:
+            return styled
+    # Last resort: numeric suffix to guarantee uniqueness
+    base = variants[index % len(variants)]
+    return _apply_h2_style(style, f"{base} (part {index + 1})")
+
+
+def _apply_h2_style(style: str, base: str) -> str:
+    if style == "question":
+        return f"What about {base.lower()}?"
+    if style == "imperative":
+        return f"Master {base.lower()}"
+    return base
 
 
 def _purposes_for(n: int) -> list[str]:
@@ -164,11 +218,9 @@ def _visuals_for(purpose: str) -> list[str]:
 def _fill_titles(templates: list[str], keyword: str, year: str, n: int) -> list[str]:
     out: list[str] = []
     for tmpl in templates[:n]:
-        out.append(
-            tmpl.format(Keyword=keyword.title() if keyword.islower() else keyword, Year=year, N=5)
-        )
+        out.append(tmpl.format(Keyword=keyword, Year=year, N=5))
     while len(out) < n:
-        out.append(f"{keyword} — {year}")
+        out.append(f"{keyword} ({year})")
     return out[:n]
 
 

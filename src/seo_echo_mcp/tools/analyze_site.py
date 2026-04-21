@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from collections import Counter
 from datetime import datetime, timezone
@@ -16,6 +17,8 @@ from seo_echo_mcp.extractors.content import extract_content
 from seo_echo_mcp.extractors.sitemap import discover_posts
 from seo_echo_mcp.extractors.style import analyze_style
 from seo_echo_mcp.schemas import PostSample, SiteProfile
+
+logger = logging.getLogger(__name__)
 
 _USER_AGENT = f"seo-echo-mcp/{__version__} (+https://github.com/canberkys/seo-echo-mcp)"
 _MAX_CONCURRENCY = 5
@@ -37,6 +40,7 @@ async def analyze_site(url: str, max_samples: int = 12) -> SiteProfile:
     """
     root = _normalize_url(url)
     domain = urlparse(root).netloc
+    logger.info("analyze_site start url=%s max_samples=%d", root, max_samples)
 
     async with httpx.AsyncClient(
         headers={"User-Agent": _USER_AGENT},
@@ -46,9 +50,11 @@ async def analyze_site(url: str, max_samples: int = 12) -> SiteProfile:
         try:
             await client.head(root, timeout=10.0)
         except httpx.HTTPError as e:
+            logger.warning("analyze_site unreachable url=%s err=%s", root, e)
             raise ValueError(f"Unable to reach URL: {root}") from e
 
         candidate_urls = await discover_posts(root, client)
+        logger.info("analyze_site discovered=%d candidate URLs", len(candidate_urls))
         if not candidate_urls:
             raise ValueError(
                 f"Could not discover any posts for {root}. "
@@ -96,6 +102,15 @@ async def analyze_site(url: str, max_samples: int = 12) -> SiteProfile:
     style = analyze_style(bodies, h2_lists, language)
     topics = _top_tokens(combined, language, n=8)
     top_cats = [c for c, _ in Counter(categories).most_common(5)]
+    logger.info(
+        "analyze_site done url=%s lang=%s (%s) posts=%d tone=%s h2_pattern=%s",
+        root,
+        language,
+        confidence,
+        len(posts),
+        style.tone,
+        style.h2_pattern,
+    )
 
     return SiteProfile(
         domain=domain,

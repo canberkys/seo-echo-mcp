@@ -339,7 +339,3 @@ create `src/seo_echo_mcp/config/templates/<lang>.py` with `TITLE_TEMPLATES`, `ME
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## Credits
-
-Inspired by [egebese/seo-research-mcp](https://github.com/egebese/seo-research-mcp) (keyword data) and similar community MCP projects.

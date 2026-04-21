@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.1] — 2026-04-21
+
+### Fixed
+
+- `generate_outline`: section H2s are now guaranteed to be unique. Previously the template pool could recycle the same heading across sections when the outline was long or competitor topics ran out (observed as two "Key principles of X" sections). A 12-variant synthetic pool plus a used-H2 set backs the fix, and a last-resort numeric suffix prevents any collision.
+- `generate_outline` + `suggest_titles`: keyword casing is preserved. Earlier both tools ran `keyword.title()` when the input was lowercase, which broke proper nouns ("VMware vMotion" → "Vmware Vmotion"). Input is now kept verbatim.
+
+### Added
+
+- `suggest_titles` now reads the most common N from competitor titles (range 3–50) and uses it when filling listicle templates. Suggestions mirror the shape SERP competitors are already using ("Top 10 …" instead of a hard-coded 7).
+- Stderr logging in `server.py`: structured lines written to stderr (stdout stays reserved for the MCP protocol). Configure verbosity via the `SEO_ECHO_LOG_LEVEL` env var (default `INFO`). `analyze_site` and `analyze_competitors` emit start/finish milestones so multi-tool chains are debuggable in IDE logs.
+
+### Changed
+
+- CI: `ruff check` and `ruff format --check` both pass; all-matrix (Py 3.10–3.13) green.
+- `publish.yml` is `workflow_dispatch`-only; the `environment: release` key was removed so GitHub Releases no longer leave fail-state deployment records. Re-enable both when PyPI trusted publishing is configured.
+- Installation: default path is `uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp`. PyPI path kept as an optional future fallback.
+- README: IDE Setup is now a set of collapsible `<details>` blocks per IDE; badges updated (CI + release, PyPI badge removed until published).
+- Repo discoverability: GitHub About + 20 topics set, `pyproject.toml` keywords expanded (29 terms, mirrors topic list).
+
+### Removed
+
+- `docs/build-spec.md` — original development artifact with placeholder fields; not useful in a public repo.
+
 ## [0.2.0] — 2026-04-21
 
 ### Added — content creator expansion

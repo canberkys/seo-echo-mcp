@@ -34,3 +34,20 @@ async def test_outline_respects_target_word_count(site_profile_en):
     assert outline.word_count_target == 500
     # 500 / 250 = 2, clamped to minimum 5
     assert len(outline.sections) == 5
+
+
+@pytest.mark.asyncio
+async def test_outline_sections_have_unique_h2s(site_profile_en):
+    """Section H2s should never collide, even when the template pool is short."""
+    outline = await generate_outline("kubernetes", site_profile_en, target_word_count=3000)
+    h2s = [s.h2 for s in outline.sections]
+    assert len(h2s) == len(set(h2s)), f"Duplicate H2s found: {h2s}"
+
+
+@pytest.mark.asyncio
+async def test_outline_preserves_keyword_casing(site_profile_tr):
+    """`.title()` would turn 'VMware vMotion' into 'Vmware Vmotion'; we must not."""
+    outline = await generate_outline("VMware vMotion", site_profile_tr)
+    joined = " ".join(s.h2 for s in outline.sections)
+    assert "VMware vMotion" in joined
+    assert "Vmware Vmotion" not in joined

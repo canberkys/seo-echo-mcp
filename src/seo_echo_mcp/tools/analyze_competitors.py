@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from collections import Counter
 from datetime import datetime, timezone
@@ -14,6 +15,8 @@ from seo_echo_mcp import __version__
 from seo_echo_mcp.extractors.content import extract_h2s_and_structure
 from seo_echo_mcp.extractors.serp import SerpError, search
 from seo_echo_mcp.schemas import CompetitorAnalysis, CompetitorInsights, SerpEntry
+
+logger = logging.getLogger(__name__)
 
 _USER_AGENT = (
     f"seo-echo-mcp/{__version__} "
@@ -49,6 +52,13 @@ async def analyze_competitors(
     """
     if not keyword and not urls:
         raise ValueError("Either `keyword` or `urls` must be provided.")
+    logger.info(
+        "analyze_competitors start keyword=%r urls=%d language=%s country=%s",
+        keyword,
+        len(urls) if urls else 0,
+        language,
+        country,
+    )
 
     async with httpx.AsyncClient(
         headers={"User-Agent": _USER_AGENT},
@@ -64,6 +74,7 @@ async def analyze_competitors(
             try:
                 serp_seeds = await search(keyword, language, country, top_n, client)
             except SerpError as e:
+                logger.warning("analyze_competitors SERP failed keyword=%r err=%s", keyword, e)
                 raise RuntimeError(str(e)) from e
 
         pages = await _fetch_many([s["url"] for s in serp_seeds], client)

@@ -1,9 +1,17 @@
 """FastMCP entry point for seo-echo-mcp.
 
 Registers the four public tools and exposes `main()` as the stdio CLI entry.
+
+Logging is configured here to write to **stderr only** — stdout is reserved for
+the MCP stdio protocol. Level can be overridden via the `SEO_ECHO_LOG_LEVEL`
+environment variable (default `INFO`).
 """
 
 from __future__ import annotations
+
+import logging
+import os
+import sys
 
 from fastmcp import FastMCP
 
@@ -20,6 +28,21 @@ from seo_echo_mcp.tools.generate_slug import generate_slug
 from seo_echo_mcp.tools.prepare_draft_skeleton import prepare_draft_skeleton
 from seo_echo_mcp.tools.readability_report import readability_report
 from seo_echo_mcp.tools.suggest_titles import suggest_titles
+
+
+def _configure_logging() -> None:
+    level_name = os.environ.get("SEO_ECHO_LOG_LEVEL", "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+    handler = logging.StreamHandler(stream=sys.stderr)
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    root = logging.getLogger("seo_echo_mcp")
+    root.setLevel(level)
+    # Replace existing handlers so repeated imports don't stack them.
+    root.handlers = [handler]
+    root.propagate = False
+
+
+_configure_logging()
 
 mcp = FastMCP(
     name="seo-echo-mcp",

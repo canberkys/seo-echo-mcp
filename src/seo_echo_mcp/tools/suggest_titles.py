@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+from collections import Counter
 from datetime import datetime, timezone
 
 from seo_echo_mcp.config.templates.loader import load as load_templates
@@ -23,6 +25,7 @@ _PATTERNS_ORDER = (
     "curiosity",
     "statement",
 )
+_DEFAULT_LISTICLE_N = 7
 
 
 async def suggest_titles(
@@ -50,17 +53,23 @@ async def suggest_titles(
     """
     tpl = load_templates(site_profile.language)
     year = str(datetime.now(timezone.utc).year)
-    keyword_display = keyword.title() if keyword.islower() else keyword
+    # Preserve user casing — users write "VMware vMotion" correctly.
+    keyword_display = keyword
 
     dominant = competitor_analysis.insights.dominant_format if competitor_analysis else None
     site_pattern = site_profile.style.h2_pattern
+    listicle_n = _competitor_listicle_n(competitor_analysis)
 
     ordered_patterns = _rank_patterns(site_pattern, dominant)
     items: list[TitleSuggestion] = []
+    seen_titles: set[str] = set()
     for pattern in ordered_patterns:
         templates = tpl.TITLE_VARIANT_TEMPLATES.get(pattern, [])
         for template in templates:
-            title = template.format(Keyword=keyword_display, Year=year, N=7)
+            title = template.format(Keyword=keyword_display, Year=year, N=listicle_n)
+            if title in seen_titles:
+                continue
+            seen_titles.add(title)
             items.append(
                 TitleSuggestion(
                     title=title,
@@ -80,6 +89,26 @@ async def suggest_titles(
     return TitleSuggestions(
         keyword=keyword, language=site_profile.language, items=items, primary_recommendation=primary
     )
+
+
+def _competitor_listicle_n(comp: CompetitorAnalysis | None) -> int:
+    """Most common integer appearing in competitor titles, for listicle parity.
+
+    Falls back to 7 when unavailable. This makes suggested listicles ("Top N X")
+    match the count SERP competitors are already using — readers and search
+    engines expect a similar shape.
+    """
+    if not comp or not comp.results:
+        return _DEFAULT_LISTICLE_N
+    numbers: list[int] = []
+    for r in comp.results:
+        for match in re.findall(r"\b(\d{1,3})\b", r.title or ""):
+            n = int(match)
+            if 3 <= n <= 50:  # listicle-reasonable range
+                numbers.append(n)
+    if not numbers:
+        return _DEFAULT_LISTICLE_N
+    return Counter(numbers).most_common(1)[0][0]
 
 
 def _rank_patterns(site_pattern: str, dominant: str | None) -> list[str]:
