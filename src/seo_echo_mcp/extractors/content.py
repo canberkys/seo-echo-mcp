@@ -16,9 +16,10 @@ from selectolax.parser import HTMLParser
 
 def extract_content(html: str) -> dict[str, Any]:
     """Return title, main text, word count, H2 list, category, published date."""
-    main_text = trafilatura.extract(
-        html, include_comments=False, include_tables=False, favor_recall=True
-    ) or ""
+    main_text = (
+        trafilatura.extract(html, include_comments=False, include_tables=False, favor_recall=True)
+        or ""
+    )
 
     tree = HTMLParser(html)
 

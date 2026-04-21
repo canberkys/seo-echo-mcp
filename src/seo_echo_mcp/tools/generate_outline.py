@@ -40,13 +40,17 @@ async def generate_outline(
     language = site_profile.language
     tpl = load_templates(language)
     year = str(datetime.now(timezone.utc).year)
-    category = new_category or (site_profile.categories[0] if site_profile.categories else "general")
+    category = new_category or (
+        site_profile.categories[0] if site_profile.categories else "general"
+    )
     addressing = site_profile.style.addressing
     h2_style = site_profile.style.h2_pattern
     word_count_target = target_word_count or site_profile.style.average_word_count or 1200
     section_count = max(_MIN_SECTIONS, min(_MAX_SECTIONS, word_count_target // _WORDS_PER_SECTION))
 
-    sections = _build_sections(keyword, tpl, h2_style, competitor_analysis, section_count, word_count_target)
+    sections = _build_sections(
+        keyword, tpl, h2_style, competitor_analysis, section_count, word_count_target
+    )
     titles = _fill_titles(tpl.TITLE_TEMPLATES, keyword, year, n=3)
     metas = _fill_metas(tpl.META_TEMPLATES, keyword, year)
     internal_link_targets = _select_internal_links(site_profile, keyword, k=5)
@@ -181,7 +185,11 @@ def _fit_meta_length(text: str) -> str:
     if len(text) >= 140 and len(text) <= 160:
         return text
     if len(text) < 140:
-        return text + " " + ("Learn the essentials today." if not text.endswith(".") else "Learn more today.")
+        return (
+            text
+            + " "
+            + ("Learn the essentials today." if not text.endswith(".") else "Learn more today.")
+        )
     return text[:157].rstrip() + "…"
 
 

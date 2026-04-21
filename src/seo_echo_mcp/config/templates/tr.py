@@ -80,4 +80,3 @@ TITLE_VARIANT_TEMPLATES: dict[str, list[str]] = {
     ],
     "statement": ["{Keyword}, Açıkça Anlatıldı", "{Keyword}: Dürüst Rehber"],
 }
-

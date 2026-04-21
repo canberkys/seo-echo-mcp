@@ -74,11 +74,26 @@ def _site_vocab(site: SiteProfile) -> set[str]:
 
 
 _STOP = {
-    "what", "how", "why", "when", "where", "which", "with", "from", "your",
-    "nedir", "nasil", "nasıl", "neden",
-    "como", "cómo", "porque",
-    "comment", "pourquoi",
-    "warum", "wie",
+    "what",
+    "how",
+    "why",
+    "when",
+    "where",
+    "which",
+    "with",
+    "from",
+    "your",
+    "nedir",
+    "nasil",
+    "nasıl",
+    "neden",
+    "como",
+    "cómo",
+    "porque",
+    "comment",
+    "pourquoi",
+    "warum",
+    "wie",
 }
 
 
@@ -89,5 +104,7 @@ def _meaningful_tokens(text: str) -> set[str]:
 
 def _angle_hint(topic: str, keyword: str) -> str:
     if keyword:
-        return f"Explore '{topic}' in the context of '{keyword}' — competitors cover it but you don't."
+        return (
+            f"Explore '{topic}' in the context of '{keyword}' — competitors cover it but you don't."
+        )
     return f"Write a focused piece on '{topic}'."

@@ -125,13 +125,11 @@ def _select_samples(urls: list[str], k: int) -> list[str]:
     # Simple deterministic sampling: take first k/2 + last k/2 to cover
     # recent + older-but-indexed posts (sitemap ordering is typically by date).
     head = urls[: k // 2]
-    tail = urls[-(k - len(head)):]
+    tail = urls[-(k - len(head)) :]
     return head + tail
 
 
-async def _fetch_many(
-    urls: list[str], client: httpx.AsyncClient
-) -> list[tuple[str, str | None]]:
+async def _fetch_many(urls: list[str], client: httpx.AsyncClient) -> list[tuple[str, str | None]]:
     sem = asyncio.Semaphore(_MAX_CONCURRENCY)
 
     async def _one(u: str) -> tuple[str, str | None]:
@@ -178,24 +176,95 @@ def _top_tokens(text: str, language: str, n: int) -> list[str]:
 
 _STOPWORDS: dict[str, set[str]] = {
     "en": {
-        "this", "that", "with", "from", "have", "will", "your", "about", "which",
-        "been", "they", "their", "there", "what", "when", "more", "than", "some",
-        "these", "would", "could", "should", "into", "because",
+        "this",
+        "that",
+        "with",
+        "from",
+        "have",
+        "will",
+        "your",
+        "about",
+        "which",
+        "been",
+        "they",
+        "their",
+        "there",
+        "what",
+        "when",
+        "more",
+        "than",
+        "some",
+        "these",
+        "would",
+        "could",
+        "should",
+        "into",
+        "because",
     },
     "tr": {
-        "için", "daha", "ancak", "veya", "ile", "bir", "bu", "şu", "olarak",
-        "olduğu", "gibi", "kadar", "hem", "çok", "sonra", "önce", "yani",
+        "için",
+        "daha",
+        "ancak",
+        "veya",
+        "ile",
+        "bir",
+        "bu",
+        "şu",
+        "olarak",
+        "olduğu",
+        "gibi",
+        "kadar",
+        "hem",
+        "çok",
+        "sonra",
+        "önce",
+        "yani",
     },
     "es": {
-        "para", "porque", "como", "pero", "cuando", "donde", "este", "esta",
-        "esos", "todos", "entre", "sobre", "hasta", "desde",
+        "para",
+        "porque",
+        "como",
+        "pero",
+        "cuando",
+        "donde",
+        "este",
+        "esta",
+        "esos",
+        "todos",
+        "entre",
+        "sobre",
+        "hasta",
+        "desde",
     },
     "fr": {
-        "pour", "avec", "mais", "quand", "cette", "comme", "entre", "dans",
-        "leur", "leurs", "sans", "après", "avant",
+        "pour",
+        "avec",
+        "mais",
+        "quand",
+        "cette",
+        "comme",
+        "entre",
+        "dans",
+        "leur",
+        "leurs",
+        "sans",
+        "après",
+        "avant",
     },
     "de": {
-        "und", "oder", "aber", "wenn", "wie", "mit", "ohne", "zwischen",
-        "dieser", "diese", "dieses", "jener", "bevor", "nachdem",
+        "und",
+        "oder",
+        "aber",
+        "wenn",
+        "wie",
+        "mit",
+        "ohne",
+        "zwischen",
+        "dieser",
+        "diese",
+        "dieses",
+        "jener",
+        "bevor",
+        "nachdem",
     },
 }

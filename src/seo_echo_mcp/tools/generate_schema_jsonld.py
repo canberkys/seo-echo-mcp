@@ -59,7 +59,11 @@ async def generate_schema_jsonld(
             }
         ]
     elif schema_type == "Review":
-        data["reviewRating"] = {"@type": "Rating", "ratingValue": "<!-- FILL -->", "bestRating": "5"}
+        data["reviewRating"] = {
+            "@type": "Rating",
+            "ratingValue": "<!-- FILL -->",
+            "bestRating": "5",
+        }
         data["itemReviewed"] = {"@type": "Thing", "name": "<!-- FILL -->"}
 
     json_ld = json.dumps(data, indent=2, ensure_ascii=False)

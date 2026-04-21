@@ -32,10 +32,7 @@ async def test_readability_english_hard_long_sentences():
 
 @pytest.mark.asyncio
 async def test_readability_turkish_uses_atesman():
-    draft = (
-        "# Başlık\n\nBu kısa bir örnek. Cümleler sade. Okuması kolay. "
-        "Türkçe formülü denenir."
-    )
+    draft = "# Başlık\n\nBu kısa bir örnek. Cümleler sade. Okuması kolay. Türkçe formülü denenir."
     report = await readability_report(draft, language="tr")
     assert report.formula_used == "atesman-tr"
     assert report.passive_voice_ratio is None

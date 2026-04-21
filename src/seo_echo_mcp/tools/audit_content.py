@@ -79,7 +79,8 @@ async def audit_content(
     score = _score(checks)
 
     recommendations = [
-        c.message for c in sorted(checks, key=lambda x: -SEVERITY_WEIGHTS.get(x.severity, 0))
+        c.message
+        for c in sorted(checks, key=lambda x: -SEVERITY_WEIGHTS.get(x.severity, 0))
         if not c.pass_
     ][:8]
 
@@ -109,7 +110,9 @@ def _check_word_count(wc: int, sp: SiteProfile) -> Check:
         severity="warning",
         actual=wc,
         expected=f"{lo}-{hi}",
-        message=f"Word count {wc} outside preferred {lo}-{hi}." if not ok else "Word count in range.",
+        message=f"Word count {wc} outside preferred {lo}-{hi}."
+        if not ok
+        else "Word count in range.",
     )
 
 
@@ -248,7 +251,9 @@ def _check_heading_hierarchy(h1: str, h2s: list[str], h3s: list[str]) -> Check:
 
 
 def _check_paragraph_length(body: str, sp: SiteProfile) -> Check:
-    paragraphs = [p for p in re.split(r"\n\s*\n", body) if p.strip() and not p.lstrip().startswith("#")]
+    paragraphs = [
+        p for p in re.split(r"\n\s*\n", body) if p.strip() and not p.lstrip().startswith("#")
+    ]
     if not paragraphs:
         return Check(
             name="paragraph_length",
@@ -364,7 +369,9 @@ def _check_keyword_in_title(h1: str, keyword: str) -> Check:
         actual=h1 or None,
         expected=keyword,
         message=(
-            f"Target keyword '{keyword}' missing from title." if not ok else "Keyword present in title."
+            f"Target keyword '{keyword}' missing from title."
+            if not ok
+            else "Keyword present in title."
         ),
     )
 
@@ -391,7 +398,9 @@ def _check_keyword_density(plain: str, keyword: str, word_count: int) -> Check:
 
 
 def _check_keyword_in_first_paragraph(body: str, keyword: str) -> Check:
-    paragraphs = [p for p in re.split(r"\n\s*\n", body) if p.strip() and not p.lstrip().startswith("#")]
+    paragraphs = [
+        p for p in re.split(r"\n\s*\n", body) if p.strip() and not p.lstrip().startswith("#")
+    ]
     first = paragraphs[0] if paragraphs else ""
     ok = keyword.lower() in first.lower()
     return Check(
@@ -426,7 +435,5 @@ def _check_meta_description_length(meta: str) -> Check:
 
 
 def _score(checks: list[Check]) -> int:
-    deduction = sum(
-        SEVERITY_WEIGHTS.get(c.severity, 0) for c in checks if not c.pass_
-    )
+    deduction = sum(SEVERITY_WEIGHTS.get(c.severity, 0) for c in checks if not c.pass_)
     return max(0, 100 - deduction)

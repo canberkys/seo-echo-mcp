@@ -293,9 +293,7 @@ class DraftSkeleton(BaseModel):
     has_schema: bool
 
 
-def apply_voice_overrides(
-    site_profile: SiteProfile, overrides: dict | None
-) -> SiteProfile:
+def apply_voice_overrides(site_profile: SiteProfile, overrides: dict | None) -> SiteProfile:
     """Return a copy of `site_profile` with `StyleProfile` fields overridden.
 
     Used by tools that accept a `voice_overrides` argument. The original object

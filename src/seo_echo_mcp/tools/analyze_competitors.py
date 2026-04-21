@@ -100,9 +100,7 @@ async def analyze_competitors(
     )
 
 
-async def _fetch_many(
-    urls: list[str], client: httpx.AsyncClient
-) -> list[tuple[str, str | None]]:
+async def _fetch_many(urls: list[str], client: httpx.AsyncClient) -> list[tuple[str, str | None]]:
     sem = asyncio.Semaphore(_MAX_CONCURRENCY)
 
     async def _one(u: str) -> tuple[str, str | None]:

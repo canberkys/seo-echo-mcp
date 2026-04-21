@@ -123,7 +123,9 @@ async def prepare_draft_skeleton(
     if faq_section:
         body_parts.append("")
         body_parts.append("<!-- Paste the FAQPage JSON-LD in <head> as well:")
-        body_parts.append(f'<script type="application/ld+json">\n{faq_section.faq_jsonld}\n</script>')
+        body_parts.append(
+            f'<script type="application/ld+json">\n{faq_section.faq_jsonld}\n</script>'
+        )
         body_parts.append("-->")
 
     markdown = "\n".join(body_parts).rstrip() + "\n"

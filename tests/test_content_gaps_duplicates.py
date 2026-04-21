@@ -29,7 +29,9 @@ def _serp_entry(url: str, title: str, h2s: list[str], position: int) -> SerpEntr
     )
 
 
-def _competitor_analysis(entries: list[SerpEntry], keyword: str = "kubernetes") -> CompetitorAnalysis:
+def _competitor_analysis(
+    entries: list[SerpEntry], keyword: str = "kubernetes"
+) -> CompetitorAnalysis:
     return CompetitorAnalysis(
         keyword=keyword,
         language="en",

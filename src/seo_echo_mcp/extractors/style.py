@@ -130,7 +130,9 @@ def _h2_pattern(
     q = sum(1 for h in h2s if h.rstrip().endswith("?"))
     imp_hints = IMPERATIVE_HINTS.get(language, IMPERATIVE_HINTS["en"])
     imp = sum(
-        1 for h in h2s if any(h.lower().startswith(hint + " ") or h.lower() == hint for hint in imp_hints)
+        1
+        for h in h2s
+        if any(h.lower().startswith(hint + " ") or h.lower() == hint for hint in imp_hints)
     )
     if q / total > 0.5:
         return "question"

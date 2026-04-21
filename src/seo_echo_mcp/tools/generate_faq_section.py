@@ -48,7 +48,9 @@ async def generate_faq_section(
     ]
     markdown = _render_markdown(items, language)
     jsonld = _render_jsonld(items, language)
-    return FaqSection(keyword=keyword, language=language, items=items, markdown=markdown, faq_jsonld=jsonld)
+    return FaqSection(
+        keyword=keyword, language=language, items=items, markdown=markdown, faq_jsonld=jsonld
+    )
 
 
 def _collect_questions(

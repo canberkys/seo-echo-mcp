@@ -84,4 +84,3 @@ TITLE_VARIANT_TEMPLATES: dict[str, list[str]] = {
     ],
     "statement": ["{Keyword}, entmystifiziert", "{Keyword}: Der ehrliche Leitfaden"],
 }
-

@@ -59,7 +59,9 @@ async def test_draft_skeleton_includes_faq_and_schema_when_provided(site_profile
         author_name="Author",
         published_at="2026-04-21",
     )
-    skeleton = await prepare_draft_skeleton(outline, site_profile_en, faq_section=faq, schema_jsonld=schema)
+    skeleton = await prepare_draft_skeleton(
+        outline, site_profile_en, faq_section=faq, schema_jsonld=schema
+    )
     assert skeleton.has_faq is True
     assert skeleton.has_schema is True
     assert "Frequently Asked Questions" in skeleton.markdown

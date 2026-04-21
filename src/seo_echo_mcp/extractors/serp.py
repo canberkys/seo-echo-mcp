@@ -147,7 +147,9 @@ async def _google_cse(
 
 def _strip_ddg_redirect(href: str) -> str:
     if href.startswith("//duckduckgo.com/l/") or href.startswith("/l/"):
-        parsed = urlparse("https:" + href if href.startswith("//") else "https://duckduckgo.com" + href)
+        parsed = urlparse(
+            "https:" + href if href.startswith("//") else "https://duckduckgo.com" + href
+        )
         qs = dict(p.split("=", 1) for p in parsed.query.split("&") if "=" in p)
         from urllib.parse import unquote
 

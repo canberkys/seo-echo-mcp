@@ -58,9 +58,7 @@ async def test_analyze_site_happy_path():
 @pytest.mark.asyncio
 async def test_analyze_site_raises_on_unreachable():
     with respx.mock(assert_all_called=False) as mock:
-        mock.head("https://nowhere.invalid").mock(
-            side_effect=httpx.ConnectError("no route")
-        )
+        mock.head("https://nowhere.invalid").mock(side_effect=httpx.ConnectError("no route"))
         with pytest.raises(ValueError, match="Unable to reach"):
             await analyze_site("nowhere.invalid")
 

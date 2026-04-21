@@ -1,8 +1,13 @@
 name: Publish to PyPI
 
+# PyPI trusted publishing is not yet configured on this repo. Until the PyPI
+# project + GitHub OIDC linkage is in place, keep this workflow manual-only
+# (workflow_dispatch) so new GitHub Releases don't trigger a failing run.
+# To enable automatic publishing on release, uncomment the `release:` block.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+  # release:
+  #   types: [published]
 
 jobs:
   publish:
