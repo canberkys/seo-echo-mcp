@@ -12,7 +12,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: release
+    # `environment: release` intentionally omitted until PyPI trusted publishing
+    # is configured. Re-add it (and define the `release` environment in repo
+    # settings) when enabling the release trigger above.
     permissions:
       id-token: write
     steps:
