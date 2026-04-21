@@ -27,6 +27,7 @@ from seo_echo_mcp.tools.generate_schema_jsonld import generate_schema_jsonld
 from seo_echo_mcp.tools.generate_slug import generate_slug
 from seo_echo_mcp.tools.prepare_draft_skeleton import prepare_draft_skeleton
 from seo_echo_mcp.tools.readability_report import readability_report
+from seo_echo_mcp.tools.suggest_image_alts import suggest_image_alts
 from seo_echo_mcp.tools.suggest_titles import suggest_titles
 
 
@@ -76,6 +77,7 @@ mcp.tool(prepare_draft_skeleton)
 # Post-draft quality
 mcp.tool(audit_content)
 mcp.tool(readability_report)
+mcp.tool(suggest_image_alts)
 
 
 def main() -> None:

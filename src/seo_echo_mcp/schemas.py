@@ -293,6 +293,26 @@ class DraftSkeleton(BaseModel):
     has_schema: bool
 
 
+class ImageAltSuggestion(BaseModel):
+    """One image in the draft with an alt-text analysis."""
+
+    position: int
+    src: str
+    current_alt: str
+    status: Literal["missing", "weak", "ok"]
+    suggested_alts: list[str]
+    context_snippet: str
+
+
+class ImageAltReport(BaseModel):
+    """Alt-text audit for every image in a markdown draft."""
+
+    image_count: int
+    missing_count: int
+    weak_count: int
+    items: list[ImageAltSuggestion]
+
+
 def apply_voice_overrides(site_profile: SiteProfile, overrides: dict | None) -> SiteProfile:
     """Return a copy of `site_profile` with `StyleProfile` fields overridden.
 

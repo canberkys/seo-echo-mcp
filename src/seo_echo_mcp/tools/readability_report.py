@@ -16,6 +16,19 @@ _PASSIVE_EN = re.compile(
     r"\b(?:am|is|are|was|were|be|been|being)\b\s+\w+(?:ed|en)\b", re.IGNORECASE
 )
 
+# Turkish passive: verb + -ıl-/-il-/-ul-/-ül- / -ın-/-in-/-un-/-ün- infixes,
+# typically followed by tense markers (-dı/-di/-du/-dü/-tı/-ti etc. or -ıyor).
+_PASSIVE_TR = re.compile(
+    r"\b\w{3,}(?:[ıiuü]l|[ıiuü]n)(?:[dt][ıiuü]|m[ıiuü][şs]|[ıiuü]yor)\w*\b",
+    re.IGNORECASE,
+)
+
+# German passive: werden-family auxiliary + past participle (ge- or -iert endings).
+_PASSIVE_DE = re.compile(
+    r"\b(?:wird|werden|wurde|wurden|geworden|worden)\b\s+(?:\w+\s+){0,3}\w*(?:ge\w+|\w+iert)\b",
+    re.IGNORECASE,
+)
+
 
 async def readability_report(content_markdown: str, language: str = "en") -> ReadabilityReport:
     """Score readability of a markdown draft.
@@ -46,8 +59,9 @@ async def readability_report(content_markdown: str, language: str = "en") -> Rea
     avg_syllables = syllables / word_count if word_count else 0.0
 
     passive_ratio: float | None = None
-    if language == "en":
-        passive_hits = len(_PASSIVE_EN.findall(plain))
+    passive_pattern = _PASSIVE_PATTERNS.get(language)
+    if passive_pattern is not None:
+        passive_hits = len(passive_pattern.findall(plain))
         passive_ratio = passive_hits / sentence_count if sentence_count else 0.0
 
     score, formula, verdict, grade = _score(language, avg_sentence_words, avg_syllables, words)
@@ -96,3 +110,10 @@ def _verdict_flesch(score: float) -> str:
     if score >= 50:
         return "medium"
     return "hard"
+
+
+_PASSIVE_PATTERNS: dict[str, re.Pattern[str]] = {
+    "en": _PASSIVE_EN,
+    "tr": _PASSIVE_TR,
+    "de": _PASSIVE_DE,
+}

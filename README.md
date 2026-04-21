@@ -20,7 +20,7 @@ Think of it as giving your LLM assistant a "style mirror" for your content.
 
 ## Features
 
-13 tools covering the full pipeline from site analysis through publish-ready draft + schema. Every tool is rule/template-based — **no external LLM/API calls**.
+14 tools covering the full pipeline from site analysis through publish-ready draft + schema + image-alt audit. Every tool is rule/template-based — **no external LLM/API calls**.
 
 ### Research & strategy
 
@@ -48,7 +48,8 @@ Think of it as giving your LLM assistant a "style mirror" for your content.
 |---|---|
 | `prepare_draft_skeleton` | Full markdown skeleton with frontmatter + `<!-- WRITE -->` directives per section. Host LLM fills and saves the `.md`. |
 | `audit_content` | Scores a draft against your style profile + 16 SEO checks |
-| `readability_report` | Per-language readability (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES, generic fallback) |
+| `readability_report` | Per-language readability (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES, generic fallback) + passive voice (EN/TR/DE) |
+| `suggest_image_alts` | Flags missing/weak `<img>` alt text and proposes replacements from filename + context |
 
 ### Overriding voice heuristics
 
@@ -72,7 +73,7 @@ No manual install required — run it straight from GitHub with `uvx`:
 uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
 ```
 
-`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.2.1` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
+`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.3.0` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
 
 <details>
 <summary>Other installation methods</summary>
@@ -234,7 +235,7 @@ Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
 
 </details>
 
-> **Tip:** To pin a specific release add `@v0.2.1` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.2.1`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
+> **Tip:** To pin a specific release add `@v0.3.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.3.0`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
 
 > **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
@@ -331,10 +332,9 @@ create `src/seo_echo_mcp/config/templates/<lang>.py` with `TITLE_TEMPLATES`, `ME
 ## Roadmap
 
 - [x] v0.2 — Content creator expansion (9 new tools, 13 total)
-- [ ] v0.3 — Manual URL list input for `analyze_site`
-- [ ] v0.3 — Persistent cache for site profiles
-- [ ] v0.3 — Image alt-text suggestion tool
+- [x] v0.3 — Manual URL list input for `analyze_site`, persistent cache, `suggest_image_alts`, TR/DE passive voice
 - [ ] v0.4 — Multi-site profile comparison
+- [ ] v0.4 — Semantic similarity in `check_duplicates` (stemmer + TF-IDF)
 
 ## License
 

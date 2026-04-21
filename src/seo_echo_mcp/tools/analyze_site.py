@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import os
 import re
+import time
 from collections import Counter
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
@@ -22,46 +26,95 @@ logger = logging.getLogger(__name__)
 
 _USER_AGENT = f"seo-echo-mcp/{__version__} (+https://github.com/canberkys/seo-echo-mcp)"
 _MAX_CONCURRENCY = 5
+_DEFAULT_CACHE_TTL = 24 * 60 * 60  # 24 hours
+_CACHE_DIR = Path(os.environ.get("SEO_ECHO_CACHE_DIR", Path.home() / ".cache" / "seo-echo-mcp"))
 
 
-async def analyze_site(url: str, max_samples: int = 12) -> SiteProfile:
-    """Crawl `url` and produce a SiteProfile summarizing its voice and topics.
+async def analyze_site(
+    url: str | None = None,
+    urls: list[str] | None = None,
+    max_samples: int = 12,
+    cache_ttl: int = _DEFAULT_CACHE_TTL,
+    bypass_cache: bool = False,
+) -> SiteProfile:
+    """Crawl a blog and produce a SiteProfile summarizing its voice and topics.
+
+    Provide either a root `url` (standard flow — sitemap/feed discovery runs),
+    or an explicit `urls` list (skip discovery; useful for JS-rendered sites,
+    paywalled blogs, or sites with no/blocked sitemap).
 
     Args:
-        url: Root URL of the blog. Protocol is auto-prepended if missing.
-        max_samples: Maximum number of existing posts to sample (default 12).
+        url: Root URL of the blog. Protocol auto-prepended if missing.
+        urls: Explicit list of post URLs. If given, sitemap discovery is skipped.
+            Domain is inferred from the first URL.
+        max_samples: Max posts to sample when discovering via `url` (default 12).
+            Ignored when `urls` is provided — all URLs are used.
+        cache_ttl: Seconds a cached profile is considered fresh (default 86400 = 24h).
+            Set to 0 to disable caching entirely for this call.
+        bypass_cache: Force a re-crawl even if a fresh cached profile exists.
 
     Returns:
         SiteProfile with language, categories, topics, style, and post samples.
 
     Raises:
-        ValueError: When the URL is unreachable, no posts are discoverable, or
-            all sampled pages fail content extraction (e.g. JS-rendered sites).
+        ValueError: When neither `url` nor `urls` is provided, the root URL is
+            unreachable, no posts are discoverable, or all fetched pages fail
+            content extraction (e.g. JS-rendered sites).
     """
-    root = _normalize_url(url)
-    domain = urlparse(root).netloc
-    logger.info("analyze_site start url=%s max_samples=%d", root, max_samples)
+    if not url and not urls:
+        raise ValueError("Either `url` or `urls` must be provided.")
+
+    if url:
+        root = _normalize_url(url)
+        domain = urlparse(root).netloc
+    else:
+        # urls-only mode — infer domain from the first URL
+        first = urls[0]
+        if not first.startswith(("http://", "https://")):
+            first = "https://" + first
+        parsed = urlparse(first)
+        domain = parsed.netloc
+        root = f"{parsed.scheme}://{domain}"
+
+    cache_key = domain
+    if not bypass_cache and cache_ttl > 0:
+        cached = _read_cache(cache_key, cache_ttl)
+        if cached is not None:
+            logger.info("analyze_site cache hit domain=%s", cache_key)
+            return cached
+
+    logger.info(
+        "analyze_site start url=%s urls=%d max_samples=%d",
+        root,
+        len(urls) if urls else 0,
+        max_samples,
+    )
 
     async with httpx.AsyncClient(
         headers={"User-Agent": _USER_AGENT},
         follow_redirects=True,
         timeout=httpx.Timeout(15.0, connect=10.0),
     ) as client:
-        try:
-            await client.head(root, timeout=10.0)
-        except httpx.HTTPError as e:
-            logger.warning("analyze_site unreachable url=%s err=%s", root, e)
-            raise ValueError(f"Unable to reach URL: {root}") from e
+        if urls:
+            # Skip reachability + sitemap — caller vouches for the URLs.
+            candidate_urls = [u if u.startswith("http") else "https://" + u for u in urls]
+            logger.info("analyze_site urls-mode count=%d", len(candidate_urls))
+        else:
+            try:
+                await client.head(root, timeout=10.0)
+            except httpx.HTTPError as e:
+                logger.warning("analyze_site unreachable url=%s err=%s", root, e)
+                raise ValueError(f"Unable to reach URL: {root}") from e
 
-        candidate_urls = await discover_posts(root, client)
-        logger.info("analyze_site discovered=%d candidate URLs", len(candidate_urls))
-        if not candidate_urls:
-            raise ValueError(
-                f"Could not discover any posts for {root}. "
-                "Try a direct blog/index URL or provide URLs manually in a future version."
-            )
+            candidate_urls = await discover_posts(root, client)
+            logger.info("analyze_site discovered=%d candidate URLs", len(candidate_urls))
+            if not candidate_urls:
+                raise ValueError(
+                    f"Could not discover any posts for {root}. "
+                    "Pass a list via the `urls` parameter to skip sitemap discovery."
+                )
 
-        selected = _select_samples(candidate_urls, max_samples)
+        selected = candidate_urls if urls else _select_samples(candidate_urls, max_samples)
         fetched = await _fetch_many(selected, client)
 
     posts: list[PostSample] = []
@@ -112,7 +165,7 @@ async def analyze_site(url: str, max_samples: int = 12) -> SiteProfile:
         style.h2_pattern,
     )
 
-    return SiteProfile(
+    profile = SiteProfile(
         domain=domain,
         url=root,
         language=language,
@@ -125,6 +178,36 @@ async def analyze_site(url: str, max_samples: int = 12) -> SiteProfile:
         style=style,
         existing_posts=posts,
     )
+
+    if cache_ttl > 0:
+        _write_cache(cache_key, profile)
+
+    return profile
+
+
+def _read_cache(cache_key: str, ttl: int) -> SiteProfile | None:
+    path = _CACHE_DIR / f"{cache_key}.json"
+    if not path.exists():
+        return None
+    try:
+        age = time.time() - path.stat().st_mtime
+        if age > ttl:
+            return None
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return SiteProfile.model_validate(data)
+    except (OSError, ValueError) as e:
+        logger.debug("cache read failed key=%s err=%s", cache_key, e)
+        return None
+
+
+def _write_cache(cache_key: str, profile: SiteProfile) -> None:
+    try:
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        path = _CACHE_DIR / f"{cache_key}.json"
+        path.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+        logger.debug("cache write key=%s path=%s", cache_key, path)
+    except OSError as e:
+        logger.debug("cache write failed key=%s err=%s", cache_key, e)
 
 
 def _normalize_url(url: str) -> str:

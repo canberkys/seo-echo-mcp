@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] — 2026-04-21
+
+### Added
+
+- **`suggest_image_alts`** — new tool (14 total). Parses markdown images, flags missing/weak alt text, and proposes replacements derived from the filename stem, the target keyword, and the nearest preceding paragraph. No LLM call.
+- **`analyze_site` now accepts `urls: list[str]`** — explicit post URLs skip sitemap/feed discovery entirely. Useful for JS-rendered sites, paywalled blogs, or blogs whose sitemap is blocked/missing.
+- **Persistent cache for `analyze_site`** — profiles are stored at `~/.cache/seo-echo-mcp/<domain>.json` (override via `SEO_ECHO_CACHE_DIR` env var). TTL defaults to 24h; `cache_ttl=0` disables caching, `bypass_cache=True` forces a re-crawl.
+- **Turkish and German passive-voice detection** in `readability_report`. The `passive_voice_ratio` field is now populated for English, Turkish, and German drafts (other languages still return `None` until a regex lands).
+- **`CONTRIBUTING.md`**, issue templates (bug + feature), and PR template. "Adding a language" and "Adding a tool" are documented step-by-step.
+
+### Changed
+
+- `analyze_site` signature: `url` and `urls` are now both optional — pass one or the other. Backward compatible with all `analyze_site("domain.tld")` callsites.
+
 ## [0.2.1] — 2026-04-21
 
 ### Fixed

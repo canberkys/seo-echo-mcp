@@ -45,7 +45,7 @@ async def test_analyze_site_happy_path():
         mock.get("https://example.test/posts/second-post").respond(200, text=POST_HTML)
         mock.get("https://example.test/posts/third-post").respond(200, text=POST_HTML)
 
-        profile = await analyze_site("example.test", max_samples=3)
+        profile = await analyze_site("example.test", max_samples=3, bypass_cache=True, cache_ttl=0)
 
     assert profile.domain == "example.test"
     assert profile.language == "en"
@@ -60,7 +60,7 @@ async def test_analyze_site_raises_on_unreachable():
     with respx.mock(assert_all_called=False) as mock:
         mock.head("https://nowhere.invalid").mock(side_effect=httpx.ConnectError("no route"))
         with pytest.raises(ValueError, match="Unable to reach"):
-            await analyze_site("nowhere.invalid")
+            await analyze_site("nowhere.invalid", bypass_cache=True, cache_ttl=0)
 
 
 @pytest.mark.asyncio
@@ -69,4 +69,4 @@ async def test_analyze_site_raises_when_no_posts_discovered():
         mock.head("https://empty.test").respond(200)
         mock.get(host="empty.test").respond(404)
         with pytest.raises(ValueError, match="Could not discover"):
-            await analyze_site("empty.test")
+            await analyze_site("empty.test", bypass_cache=True, cache_ttl=0)
