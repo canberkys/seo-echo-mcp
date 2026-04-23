@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime, timezone
 
 from seo_echo_mcp.config.templates.loader import load as load_templates
 from seo_echo_mcp.schemas import CompetitorAnalysis, Outline, OutlineSection, SiteProfile
+
+logger = logging.getLogger(__name__)
 
 _MIN_SECTIONS = 5
 _MAX_SECTIONS = 12
@@ -37,9 +40,14 @@ async def generate_outline(
         Outline with 5-12 sections, 3 title candidates, 3 meta descriptions,
         internal link targets, and citation-research topic stubs.
     """
+    if not keyword or not keyword.strip():
+        raise ValueError("`keyword` must be a non-empty string.")
     language = site_profile.language
     tpl = load_templates(language)
     year = str(datetime.now(timezone.utc).year)
+    logger.info(
+        "generate_outline keyword=%r lang=%s target_wc=%s", keyword, language, target_word_count
+    )
     category = new_category or (
         site_profile.categories[0] if site_profile.categories else "general"
     )
@@ -97,35 +105,26 @@ def _build_sections(
         purpose = purposes[i]
         if purpose == "introduction":
             h2 = template_pool[0].format(Keyword=keyword_display, Year=_year())
-            must_cover = [
-                f"Define {keyword}",
-                "Why it matters right now",
-                "Who this article is for",
-            ]
+            must_cover = [item.format(keyword=keyword) for item in tpl.MUST_COVER_INTRO]
         elif purpose == "summary":
-            h2 = _summary_h2(h2_style, keyword_display)
-            must_cover = ["Key takeaways", "Next action for the reader"]
+            h2 = _summary_h2(tpl, h2_style, keyword_display)
+            must_cover = [item.format(keyword=keyword) for item in tpl.MUST_COVER_SUMMARY]
         else:
             topic = next(topic_iter, None)
             if topic:
-                h2 = _format_h2(h2_style, f"{keyword_display} and {topic}")
+                joined = f"{keyword_display} {tpl.TOPIC_CONNECTOR} {topic}"
+                h2 = _format_h2(tpl, h2_style, joined)
                 must_cover = [
-                    f"Explain the role of {topic} in {keyword}",
-                    "Concrete examples",
-                    "Common pitfalls",
+                    item.format(keyword=keyword, topic=topic) for item in tpl.MUST_COVER_TOPIC
                 ]
             else:
                 h2 = _pick_unused_template(
                     template_pool, keyword_display, used_h2s
-                ) or _synthetic_h2(h2_style, keyword_display, i, used_h2s)
-                must_cover = [
-                    f"Core concept around {keyword}",
-                    "Practical application",
-                    "Example or case",
-                ]
+                ) or _synthetic_h2(tpl, h2_style, keyword_display, i, used_h2s)
+                must_cover = [item.format(keyword=keyword) for item in tpl.MUST_COVER_CORE]
         # Final dedup guard — try alternate synthetic variants before giving up
         if h2 in used_h2s:
-            h2 = _synthetic_h2(h2_style, keyword_display, i, used_h2s)
+            h2 = _synthetic_h2(tpl, h2_style, keyword_display, i, used_h2s)
         used_h2s.add(h2)
         sections.append(
             OutlineSection(
@@ -147,42 +146,27 @@ def _pick_unused_template(pool: list[str], keyword: str, used: set[str]) -> str 
     return None
 
 
-def _synthetic_h2(style: str, keyword: str, index: int, used: set[str] | None = None) -> str:
+def _synthetic_h2(tpl, style: str, keyword: str, index: int, used: set[str] | None = None) -> str:
     """Fallback H2 when the template pool is exhausted.
 
-    Walks a 12-variant pool and returns the first candidate not already in
-    `used`. Falls back to a numbered suffix only if every variant collides.
+    Walks the language-specific variant pool (12 entries per language) and
+    returns the first candidate not already in `used`. Falls back to a numbered
+    suffix only if every variant collides.
     """
-    variants = [
-        f"{keyword} in practice",
-        f"Real-world {keyword} scenarios",
-        f"{keyword} patterns to know",
-        f"Common {keyword} pitfalls",
-        f"{keyword} tips and tricks",
-        f"Advanced {keyword} techniques",
-        f"{keyword} best practices",
-        f"Troubleshooting {keyword} issues",
-        f"{keyword} in production",
-        f"Optimizing {keyword} performance",
-        f"{keyword} use cases",
-        f"Comparing {keyword} approaches",
-    ]
+    variants = [v.format(Keyword=keyword) for v in tpl.SYNTHETIC_H2_VARIANTS]
     for offset in range(len(variants)):
         base = variants[(index + offset) % len(variants)]
-        styled = _apply_h2_style(style, base)
+        styled = _apply_h2_style(tpl, style, base)
         if used is None or styled not in used:
             return styled
     # Last resort: numeric suffix to guarantee uniqueness
     base = variants[index % len(variants)]
-    return _apply_h2_style(style, f"{base} (part {index + 1})")
+    return _apply_h2_style(tpl, style, f"{base} ({index + 1})")
 
 
-def _apply_h2_style(style: str, base: str) -> str:
-    if style == "question":
-        return f"What about {base.lower()}?"
-    if style == "imperative":
-        return f"Master {base.lower()}"
-    return base
+def _apply_h2_style(tpl, style: str, base: str) -> str:
+    template = tpl.H2_STYLE_TEMPLATES.get(style, "{base}")
+    return template.format(base=base)
 
 
 def _purposes_for(n: int) -> list[str]:
@@ -191,20 +175,13 @@ def _purposes_for(n: int) -> list[str]:
     return ["introduction", *["core"] * (n - 2), "summary"]
 
 
-def _format_h2(style: str, base: str) -> str:
-    if style == "question":
-        return f"What is {base}?"
-    if style == "imperative":
-        return f"Master {base}"
-    return base
+def _format_h2(tpl, style: str, base: str) -> str:
+    return _apply_h2_style(tpl, style, base)
 
 
-def _summary_h2(style: str, keyword_title: str) -> str:
-    if style == "question":
-        return f"What should you do next with {keyword_title}?"
-    if style == "imperative":
-        return f"Put {keyword_title} into practice"
-    return f"{keyword_title}: key takeaways"
+def _summary_h2(tpl, style: str, keyword_display: str) -> str:
+    template = tpl.SUMMARY_H2.get(style, tpl.SUMMARY_H2["statement"])
+    return template.format(keyword=keyword_display)
 
 
 def _visuals_for(purpose: str) -> list[str]:

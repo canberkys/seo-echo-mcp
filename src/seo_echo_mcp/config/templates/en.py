@@ -80,3 +80,64 @@ TITLE_VARIANT_TEMPLATES: dict[str, list[str]] = {
     ],
     "statement": ["{Keyword}, Demystified", "{Keyword}: The Honest Guide"],
 }
+
+SYNTHETIC_H2_VARIANTS: list[str] = [
+    "{Keyword} in practice",
+    "Real-world {Keyword} scenarios",
+    "{Keyword} patterns to know",
+    "Common {Keyword} pitfalls",
+    "{Keyword} tips and tricks",
+    "Advanced {Keyword} techniques",
+    "{Keyword} best practices",
+    "Troubleshooting {Keyword} issues",
+    "{Keyword} in production",
+    "Optimizing {Keyword} performance",
+    "{Keyword} use cases",
+    "Comparing {Keyword} approaches",
+]
+
+MUST_COVER_INTRO: list[str] = [
+    "Define {keyword}",
+    "Why it matters right now",
+    "Who this article is for",
+]
+MUST_COVER_CORE: list[str] = [
+    "Core concept around {keyword}",
+    "Practical application",
+    "Example or case",
+]
+MUST_COVER_TOPIC: list[str] = [
+    "Explain the role of {topic} in {keyword}",
+    "Concrete examples",
+    "Common pitfalls",
+]
+MUST_COVER_SUMMARY: list[str] = [
+    "Key takeaways",
+    "Next action for the reader",
+]
+
+IMAGE_ALT_TEMPLATES: dict[str, str] = {
+    "filename": "{stem}",
+    "keyword_with_stem": "{keyword} — {stem}",
+    "keyword_with_topic": "{keyword}: {topic}",
+    "topic_only": "{topic}",
+}
+
+# Style-specific wrapper applied to a base H2 (synthetic or topic-joined).
+H2_STYLE_TEMPLATES: dict[str, str] = {
+    "question": "What is {base}?",
+    "imperative": "Master {base}",
+    "statement": "{base}",
+    "mixed": "{base}",
+}
+
+# Summary section H2 per style (last section of an outline).
+SUMMARY_H2: dict[str, str] = {
+    "question": "What should you do next with {keyword}?",
+    "imperative": "Put {keyword} into practice",
+    "statement": "{keyword}: key takeaways",
+    "mixed": "{keyword}: key takeaways",
+}
+
+# Connector when an H2 joins the keyword to a competitor topic ("X and Y").
+TOPIC_CONNECTOR = "and"

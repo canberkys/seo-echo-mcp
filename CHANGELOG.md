@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] — 2026-04-23
+
+### Security
+
+- **Cache path hardening** — `analyze_site` now sanitizes the domain used as a cache filename via `Path(domain).name` + character filter, blocking path-traversal-shaped inputs (`../evil`, `/etc/passwd`) from escaping `~/.cache/seo-echo-mcp/`.
+- **HTTP response size limits** — `analyze_site`, `analyze_competitors`, and underlying extractors reject responses larger than 5 MB to avoid memory-exhaustion scenarios on pathological pages.
+
+### Fixed — language-aware output (previously English-only fallbacks leaked through)
+
+- **`generate_outline` synthetic H2s are now per-language** — long Turkish/French/German/Spanish outlines no longer emit `"Advanced X techniques"` or `"X in practice"` in English when the template pool runs out. Added `SYNTHETIC_H2_VARIANTS`, `MUST_COVER_{INTRO,CORE,TOPIC,SUMMARY}`, `H2_STYLE_TEMPLATES`, `SUMMARY_H2`, `TOPIC_CONNECTOR` to every language module.
+- **`_apply_h2_style`, `_format_h2`, `_summary_h2`** read from the language template instead of hardcoded English strings.
+- **Tone jargon detection is per-language** (`TONE_JARGON_BY_LANG`) so a single English loanword in a Turkish blog no longer flips the tone to `technical`. Threshold raised 1% → 1.5%.
+- **TR passive regex** validated against active-voice past-tense text to keep false-positive ratio below 1.0; DE passive tested against active-voice sentences (ratio == 0.0).
+
+### Added — quality
+
+- **Turkish morphology-aware tokenization** (`utils.text.stem_tr`) — suffix stripper handles `-lar/-ler/-ı/-i/-dır/-'ı/-'ları` etc. so `check_duplicates` collapses inflections (`snapshot'ları` ≡ `snapshot`).
+- **`suggest_image_alts` is language-aware** — alt-text templates come from `IMAGE_ALT_TEMPLATES` in each language module. Weak-alt blacklist expanded with TR/ES/DE equivalents (`resim`, `görsel`, `imagen`, `bild`, …).
+- **Pronoun families in `_addressing`** — `PRONOUN_FAMILIES` collapses `sen/senin/sana/seni` to a single "sen" score (vs four separate candidates previously). `siz` family tracked independently for proper TR distinction. Same pattern for FR `tu` vs `vous`, DE `du` vs `Sie`, ES `tú` / `usted` / `vosotros`.
+- **Stratified sample selection** (`analyze_site._select_samples`) — previous `head + tail` strategy skipped the middle 50%. Stride-sampling now covers the sitemap evenly.
+- **Logging + empty-input validation** across all 14 tools — `logger.info(...)` milestones + early `ValueError` on blank strings.
+- **`TypedDict` returns for extractors** — `ExtractedPost` / `ExtractedStructure` replace `dict[str, Any]`.
+
+### Added — DX / ecosystem
+
+- **`SECURITY.md`**, **`CODE_OF_CONDUCT.md`** (Contributor Covenant 2.1), **`.github/dependabot.yml`** (weekly pip + gh-actions).
+- **`examples/`** folder with realistic anonymized artifacts (`site_profile.json`, `outline.json`, `audit_report.json`, `draft_skeleton.md`, `content_gap_report.json`).
+- **README "Use as a Python library"**, **"Troubleshooting"**, and **"What this MCP does NOT do"** sections.
+- **Full 14-tool API Reference** (previously only 4 tools were documented).
+- **Codecov** upload from CI (Python 3.13 matrix) + badge + `codecov.yml` (70% project target).
+- **Registry manifests**: `smithery.yaml` (Smithery.ai auto-discovery) and `glama.json` (Glama.ai) at the repo root. `docs/REGISTRY_SUBMISSIONS.md` tracks state + copy-paste templates for awesome-mcp-servers / mcp-get PRs.
+
 ## [0.3.0] — 2026-04-21
 
 ### Added

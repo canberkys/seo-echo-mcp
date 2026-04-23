@@ -67,3 +67,112 @@ def count_syllables_en(word: str) -> int:
     if word.endswith("e") and count > 1:
         count -= 1
     return max(count, 1)
+
+
+# Turkish inflectional suffixes we can strip without heavy morphology.
+# Ordered longest-first so we don't trim a shorter prefix of a longer suffix.
+# The apostrophe-prefixed variants catch "VMware'ın", "snapshot'ları", etc.
+_TR_SUFFIXES = (
+    "'lardan",
+    "'lerden",
+    "'larla",
+    "'lerle",
+    "'lardır",
+    "'lerdir",
+    "'ların",
+    "'lerin",
+    "'ları",
+    "'leri",
+    "'lar",
+    "'ler",
+    "'daki",
+    "'deki",
+    "'dan",
+    "'den",
+    "'tan",
+    "'ten",
+    "'nın",
+    "'nin",
+    "'nun",
+    "'nün",
+    "'ın",
+    "'in",
+    "'un",
+    "'ün",
+    "'la",
+    "'le",
+    "'ya",
+    "'ye",
+    "'na",
+    "'ne",
+    "'ı",
+    "'i",
+    "'u",
+    "'ü",
+    "'a",
+    "'e",
+    "'s",
+    "lardan",
+    "lerden",
+    "larla",
+    "lerle",
+    "lardır",
+    "lerdir",
+    "ların",
+    "lerin",
+    "larda",
+    "lerde",
+    "larda",
+    "lerde",
+    "dan",
+    "den",
+    "tan",
+    "ten",
+    "ları",
+    "leri",
+    "lar",
+    "ler",
+    "nın",
+    "nin",
+    "nun",
+    "nün",
+    "ın",
+    "in",
+    "un",
+    "ün",
+    "la",
+    "le",
+    "ya",
+    "ye",
+    "na",
+    "ne",
+    "da",
+    "de",
+    "ta",
+    "te",
+    "ı",
+    "i",
+    "u",
+    "ü",
+    "a",
+    "e",
+)
+
+
+def stem_tr(word: str) -> str:
+    """Return an approximate Turkish stem by stripping a common inflection.
+
+    Heuristic-only — does not apply vowel harmony checks or morphological
+    analysis. Good enough for Jaccard-style similarity where we want
+    "snapshot'ları" and "snapshot" to collapse to the same token.
+
+    Minimum stem length is 3 chars; suffixes that would leave a shorter stem
+    are not applied.
+    """
+    lowered = word.lower()
+    if len(lowered) <= 3:
+        return lowered
+    for suffix in _TR_SUFFIXES:
+        if lowered.endswith(suffix) and len(lowered) - len(suffix) >= 3:
+            return lowered[: -len(suffix)]
+    return lowered

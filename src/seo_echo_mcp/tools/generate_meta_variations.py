@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from seo_echo_mcp.config.seo_rules import META_DESC_MAX, META_DESC_MIN
 from seo_echo_mcp.config.templates.loader import load as load_templates
 from seo_echo_mcp.schemas import MetaVariation, MetaVariations
+
+logger = logging.getLogger(__name__)
 
 
 async def generate_meta_variations(
@@ -25,9 +28,14 @@ async def generate_meta_variations(
         MetaVariations with 5 MetaVariation entries, length and keyword presence
         tracked per item.
     """
+    if not keyword or not keyword.strip():
+        raise ValueError("`keyword` must be a non-empty string.")
+    if not title or not title.strip():
+        raise ValueError("`title` must be a non-empty string.")
     tpl = load_templates(language)
     year = str(datetime.now(timezone.utc).year)
     angles = ["problem-solution", "question", "benefit", "curiosity", "action"]
+    logger.info("generate_meta_variations keyword=%r lang=%s", keyword, language)
     items: list[MetaVariation] = []
     for angle in angles:
         template = tpl.META_ANGLES.get(angle, "{keyword} — {year}")

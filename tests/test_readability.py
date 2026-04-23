@@ -66,3 +66,37 @@ async def test_readability_de_passive_voice_detected():
     report = await readability_report(draft, language="de")
     assert report.passive_voice_ratio is not None
     assert report.passive_voice_ratio > 0
+
+
+@pytest.mark.asyncio
+async def test_readability_tr_active_past_low_passive_ratio():
+    """Active-voice Turkish past-tense narrative should score close to zero passive.
+
+    The regex is approximate — verbs with -in-/-il- that are reflexive/middle
+    voice (sevindi, yanıldı) may match. We require ratio < 1.0 to guard against
+    catastrophic over-matching while accepting some noise.
+    """
+    draft = (
+        "# Başlık\n\n"
+        "Dün akşam raporu yazdım ve ekibe gönderdim. "
+        "Sabah tekrar baktım, bir hata gördüm. "
+        "Düzelttim ve onayladım. Sonra bir kahve içtim."
+    )
+    report = await readability_report(draft, language="tr")
+    assert report.passive_voice_ratio is not None
+    # Known active past-tense sentences; passive heuristic should be low.
+    assert report.passive_voice_ratio < 1.0, (
+        f"active-voice text flagged too high: ratio={report.passive_voice_ratio}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_readability_de_active_low_passive_ratio():
+    draft = (
+        "# Titel\n\n"
+        "Ich schreibe den Bericht und schicke ihn ans Team. "
+        "Am Morgen lese ich ihn erneut. Ich trinke einen Kaffee."
+    )
+    report = await readability_report(draft, language="de")
+    assert report.passive_voice_ratio is not None
+    assert report.passive_voice_ratio == 0.0

@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Literal
 
 from seo_echo_mcp.schemas import DuplicateMatch, DuplicateReport, SiteProfile
+from seo_echo_mcp.utils.text import stem_tr
+
+logger = logging.getLogger(__name__)
 
 _STOP = {
+    # English
     "the",
     "a",
     "an",
@@ -19,13 +24,37 @@ _STOP = {
     "with",
     "in",
     "on",
+    "what",
+    "how",
+    "why",
+    "when",
+    "where",
+    "which",
+    "who",
+    # Turkish — include common question/connective words so they don't
+    # dominate Jaccard scores on short titles.
     "ve",
     "ile",
     "bir",
     "bu",
+    "şu",
     "için",
     "olan",
+    "gibi",
+    "kadar",
     "nedir",
+    "nasıl",
+    "nas",
+    "neden",
+    "nerede",
+    "niçin",
+    "hangi",
+    "hangisi",
+    "hakkınd",
+    "hakkında",
+    "yönetim",
+    "ilgili",
+    # Spanish
     "el",
     "la",
     "los",
@@ -33,15 +62,27 @@ _STOP = {
     "de",
     "del",
     "y",
+    "un",
+    "una",
+    "que",
+    # French
     "le",
     "les",
     "du",
     "des",
     "et",
+    "une",
+    "qui",
+    "quoi",
+    # German
     "der",
     "die",
     "das",
     "und",
+    "ein",
+    "eine",
+    "wer",
+    "was",
 }
 
 
@@ -52,8 +93,12 @@ async def check_duplicates(
 ) -> DuplicateReport:
     """Detect whether the proposed keyword/title overlaps with existing posts.
 
-    Uses Jaccard similarity over stopword-filtered tokens. Any post above
-    `threshold` is flagged; the verdict escalates to "duplicate" at 0.6+.
+    Uses Jaccard similarity over stopword-filtered, optionally stemmed tokens.
+    Any post above `threshold` is flagged; the verdict escalates to "duplicate"
+    at 0.6+.
+
+    For Turkish sites, tokens are stemmed with a simple suffix trimmer so
+    "snapshot'ları" and "snapshot" collapse to the same token.
 
     Args:
         proposed: Proposed keyword or title for the new piece.
@@ -63,14 +108,23 @@ async def check_duplicates(
     Returns:
         DuplicateReport with matches, scores, and an overall verdict.
     """
-    proposed_tokens = _tokenize(proposed)
+    if not proposed or not proposed.strip():
+        raise ValueError("`proposed` must be a non-empty string.")
+    language = site_profile.language
+    proposed_tokens = _tokenize(proposed, language)
+    logger.info(
+        "check_duplicates proposed=%r lang=%s existing=%d",
+        proposed,
+        language,
+        len(site_profile.existing_posts),
+    )
     if not proposed_tokens:
         return DuplicateReport(proposed=proposed, matches=[], verdict="safe")
 
     matches: list[DuplicateMatch] = []
     for post in site_profile.existing_posts:
         haystack = f"{post.title} {post.snippet}"
-        post_tokens = _tokenize(haystack)
+        post_tokens = _tokenize(haystack, language)
         if not post_tokens:
             continue
         score = _jaccard(proposed_tokens, post_tokens)
@@ -88,9 +142,13 @@ async def check_duplicates(
     return DuplicateReport(proposed=proposed, matches=matches, verdict=verdict)
 
 
-def _tokenize(text: str) -> set[str]:
-    raw = re.findall(r"[\w]{3,}", text.lower())
-    return {t for t in raw if t not in _STOP}
+def _tokenize(text: str, language: str = "en") -> set[str]:
+    # Keep apostrophe-suffixes attached so stem_tr can strip them ('larını, etc.)
+    raw = re.findall(r"[\w']{3,}", text.lower())
+    stop = _STOP
+    if language == "tr":
+        return {stem_tr(t) for t in raw if stem_tr(t) not in stop}
+    return {t for t in raw if t not in stop}
 
 
 def _jaccard(a: set[str], b: set[str]) -> float:

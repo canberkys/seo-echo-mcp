@@ -1,0 +1,48 @@
+{
+  "site_url": "https://example-tech-blog.test",
+  "keyword_scope": "kubernetes ingress",
+  "gaps": [
+    {
+      "topic": "tls",
+      "coverage_count": 7,
+      "competing_urls": [
+        "https://competitor-a.test/kubernetes-tls-guide",
+        "https://competitor-b.test/ingress-tls-termination",
+        "https://competitor-c.test/cert-manager-setup",
+        "https://competitor-d.test/tls-best-practices",
+        "https://competitor-e.test/letsencrypt-k8s"
+      ],
+      "suggested_angle": "Explore 'tls' in the context of 'kubernetes ingress' — competitors cover it but you don't."
+    },
+    {
+      "topic": "certmanager",
+      "coverage_count": 5,
+      "competing_urls": [
+        "https://competitor-a.test/cert-manager-setup",
+        "https://competitor-c.test/cert-manager-setup",
+        "https://competitor-e.test/letsencrypt-k8s"
+      ],
+      "suggested_angle": "Explore 'certmanager' in the context of 'kubernetes ingress' — competitors cover it but you don't."
+    },
+    {
+      "topic": "nginx",
+      "coverage_count": 4,
+      "competing_urls": [
+        "https://competitor-a.test/nginx-ingress",
+        "https://competitor-b.test/nginx-vs-traefik",
+        "https://competitor-d.test/nginx-tuning"
+      ],
+      "suggested_angle": "Explore 'nginx' in the context of 'kubernetes ingress' — competitors cover it but you don't."
+    },
+    {
+      "topic": "traefik",
+      "coverage_count": 3,
+      "competing_urls": [
+        "https://competitor-b.test/nginx-vs-traefik",
+        "https://competitor-c.test/traefik-routes"
+      ],
+      "suggested_angle": "Explore 'traefik' in the context of 'kubernetes ingress' — competitors cover it but you don't."
+    }
+  ],
+  "summary": "4 topic gap(s) found across 10 competitors."
+}

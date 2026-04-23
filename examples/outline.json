@@ -1,0 +1,92 @@
+{
+  "keyword": "kubernetes ingress",
+  "language": "en",
+  "suggested_titles": [
+    "Kubernetes Ingress: A Complete Guide for 2026",
+    "How to Use Kubernetes Ingress Effectively",
+    "The Best Kubernetes Ingress Strategies That Actually Work"
+  ],
+  "suggested_meta_descriptions": [
+    "Looking for kubernetes ingress? Our 2026 guide walks through the essentials, best practices and real examples — read it now.",
+    "Understand kubernetes ingress in plain language. Concrete steps, common pitfalls and the patterns that actually move results.",
+    "A practical kubernetes ingress playbook: what to do first, what to measure, and how to avoid the mistakes everyone makes."
+  ],
+  "word_count_target": 1620,
+  "h2_style": "statement",
+  "addressing": "you",
+  "category": "DevOps",
+  "sections": [
+    {
+      "h2": "Understanding Kubernetes Ingress",
+      "purpose": "introduction",
+      "word_count_target": 270,
+      "must_cover": [
+        "Define kubernetes ingress",
+        "Why it matters right now",
+        "Who this article is for"
+      ],
+      "suggested_visuals": ["hero image", "context diagram"]
+    },
+    {
+      "h2": "Kubernetes Ingress and load balancing",
+      "purpose": "core",
+      "word_count_target": 270,
+      "must_cover": [
+        "Explain the role of load balancing in kubernetes ingress",
+        "Concrete examples",
+        "Common pitfalls"
+      ],
+      "suggested_visuals": ["diagram", "screenshot"]
+    },
+    {
+      "h2": "Kubernetes Ingress fundamentals",
+      "purpose": "core",
+      "word_count_target": 270,
+      "must_cover": [
+        "Core concept around kubernetes ingress",
+        "Practical application",
+        "Example or case"
+      ],
+      "suggested_visuals": ["diagram", "screenshot"]
+    },
+    {
+      "h2": "Key principles of Kubernetes Ingress",
+      "purpose": "core",
+      "word_count_target": 270,
+      "must_cover": [
+        "Core concept around kubernetes ingress",
+        "Practical application",
+        "Example or case"
+      ],
+      "suggested_visuals": ["diagram", "screenshot"]
+    },
+    {
+      "h2": "Understanding Kubernetes Ingress patterns to know",
+      "purpose": "core",
+      "word_count_target": 270,
+      "must_cover": [
+        "Core concept around kubernetes ingress",
+        "Practical application",
+        "Example or case"
+      ],
+      "suggested_visuals": ["diagram", "screenshot"]
+    },
+    {
+      "h2": "Kubernetes Ingress: key takeaways",
+      "purpose": "summary",
+      "word_count_target": 270,
+      "must_cover": ["Key takeaways", "Next action for the reader"],
+      "suggested_visuals": ["key-takeaways card"]
+    }
+  ],
+  "recommended_internal_link_targets": [
+    "https://example-tech-blog.test/posts/kubernetes-intro",
+    "https://example-tech-blog.test/posts/load-balancing"
+  ],
+  "external_citation_topics": [
+    "Recent 2026 statistics on kubernetes ingress",
+    "Case studies involving kubernetes ingress",
+    "Expert opinions or interviews about kubernetes ingress"
+  ],
+  "cta_suggestion": "Try it in your own workflow this week and share what you learn."
+}

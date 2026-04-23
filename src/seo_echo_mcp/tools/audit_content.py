@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 import py3langid
@@ -20,6 +21,8 @@ from seo_echo_mcp.config.seo_rules import (
 )
 from seo_echo_mcp.schemas import AuditReport, Check, SiteProfile, apply_voice_overrides
 from seo_echo_mcp.utils.text import markdown_to_plain, split_headings, strip_frontmatter
+
+logger = logging.getLogger(__name__)
 
 
 async def audit_content(
@@ -43,6 +46,8 @@ async def audit_content(
     Returns:
         AuditReport with pass/fail per check, overall score, and recommendations.
     """
+    if not content_markdown or not content_markdown.strip():
+        raise ValueError("`content_markdown` must be a non-empty string.")
     site_profile = apply_voice_overrides(site_profile, voice_overrides)
     body = strip_frontmatter(content_markdown)
     plain = markdown_to_plain(body)
@@ -85,6 +90,13 @@ async def audit_content(
     ][:8]
 
     reading_minutes = max(1, round(word_count / READING_WPM))
+    logger.info(
+        "audit_content score=%d words=%d errors=%d warnings=%d",
+        _score(checks),
+        word_count,
+        errors,
+        warnings,
+    )
 
     return AuditReport(
         overall_score=score,

@@ -84,3 +84,61 @@ TITLE_VARIANT_TEMPLATES: dict[str, list[str]] = {
     ],
     "statement": ["{Keyword}, entmystifiziert", "{Keyword}: Der ehrliche Leitfaden"],
 }
+
+SYNTHETIC_H2_VARIANTS: list[str] = [
+    "{Keyword} in der Praxis",
+    "Reale Szenarien für {Keyword}",
+    "Muster für {Keyword}, die man kennen sollte",
+    "Typische Fehler bei {Keyword}",
+    "{Keyword}-Tipps und Tricks",
+    "Fortgeschrittene {Keyword}-Techniken",
+    "Best Practices für {Keyword}",
+    "Fehlerbehebung bei {Keyword}",
+    "{Keyword} im Produktionsbetrieb",
+    "{Keyword}-Performance optimieren",
+    "{Keyword}-Anwendungsfälle",
+    "{Keyword}-Ansätze im Vergleich",
+]
+
+MUST_COVER_INTRO: list[str] = [
+    "{keyword} definieren",
+    "Warum es jetzt wichtig ist",
+    "Für wen dieser Artikel bestimmt ist",
+]
+MUST_COVER_CORE: list[str] = [
+    "Kernkonzept rund um {keyword}",
+    "Praktische Anwendung",
+    "Beispiel oder Fallstudie",
+]
+MUST_COVER_TOPIC: list[str] = [
+    "Die Rolle von {topic} innerhalb von {keyword} erklären",
+    "Konkrete Beispiele",
+    "Häufige Fallstricke",
+]
+MUST_COVER_SUMMARY: list[str] = [
+    "Wichtigste Erkenntnisse",
+    "Nächster Schritt für die Leser",
+]
+
+IMAGE_ALT_TEMPLATES: dict[str, str] = {
+    "filename": "{stem}",
+    "keyword_with_stem": "{keyword} — {stem}",
+    "keyword_with_topic": "{keyword}: {topic}",
+    "topic_only": "{topic}",
+}
+
+H2_STYLE_TEMPLATES: dict[str, str] = {
+    "question": "Was ist {base}?",
+    "imperative": "{base} meistern",
+    "statement": "{base}",
+    "mixed": "{base}",
+}
+
+SUMMARY_H2: dict[str, str] = {
+    "question": "Wie geht es mit {keyword} weiter?",
+    "imperative": "Setzen Sie {keyword} in die Praxis um",
+    "statement": "{keyword}: wichtigste Erkenntnisse",
+    "mixed": "{keyword}: wichtigste Erkenntnisse",
+}
+
+TOPIC_CONNECTOR = "und"

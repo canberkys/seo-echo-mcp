@@ -12,7 +12,7 @@ from typing import Literal
 
 from seo_echo_mcp.schemas import StyleProfile
 
-# Per-language 2nd-person pronoun candidates
+# Per-language 2nd-person pronoun candidates (legacy flat list).
 PRONOUNS: dict[str, list[str]] = {
     "tr": ["sen", "siz", "senin", "sizin", "sana", "size"],
     "en": ["you", "your", "yours"],
@@ -21,6 +21,32 @@ PRONOUNS: dict[str, list[str]] = {
     "de": ["du", "sie", "ihr", "dein", "ihre"],
     "it": ["tu", "voi", "lei", "tuo", "vostro"],
     "pt": ["tu", "você", "vocês"],
+}
+
+# Pronoun FAMILIES — related forms that should roll up to a single address.
+# Detecting "senin" (possessive) shouldn't win over "sen" (family lead); we
+# pick the family with the highest combined count and report the family lead.
+PRONOUN_FAMILIES: dict[str, dict[str, list[str]]] = {
+    "tr": {
+        "sen": ["sen", "senin", "sana", "seni"],
+        "siz": ["siz", "sizin", "size", "sizi"],
+    },
+    "en": {
+        "you": ["you", "your", "yours", "yourself"],
+    },
+    "es": {
+        "tú": ["tú", "tu", "tus", "ti", "contigo"],
+        "usted": ["usted", "ustedes", "su", "sus"],
+        "vosotros": ["vosotros", "vosotras", "vuestro", "vuestra"],
+    },
+    "fr": {
+        "tu": ["tu", "ton", "ta", "tes", "toi"],
+        "vous": ["vous", "votre", "vos"],
+    },
+    "de": {
+        "du": ["du", "dein", "deine", "dich", "dir"],
+        "Sie": ["sie", "ihr", "ihre", "ihnen"],
+    },
 }
 
 # Imperative verb markers per language (suffixes/heuristics)
@@ -32,18 +58,107 @@ IMPERATIVE_HINTS: dict[str, list[str]] = {
     "de": ["lernen", "entdecken", "versuchen", "lesen"],
 }
 
-TONE_JARGON_WORDS = {
-    "api",
-    "sdk",
-    "async",
-    "kubernetes",
-    "docker",
-    "serverless",
-    "pipeline",
-    "schema",
-    "framework",
-    "algorithm",
+# Technical jargon per language. The same word (e.g. "api") can be common in
+# many languages as a loanword, but triggering `technical` tone on a single
+# English loanword inside an otherwise conversational Turkish blog was too
+# aggressive. Each language's list is calibrated to its own register.
+TONE_JARGON_BY_LANG: dict[str, set[str]] = {
+    "en": {
+        "api",
+        "sdk",
+        "async",
+        "kubernetes",
+        "docker",
+        "serverless",
+        "pipeline",
+        "schema",
+        "framework",
+        "algorithm",
+        "runtime",
+        "middleware",
+        "kernel",
+        "deployment",
+        "orchestration",
+        "namespace",
+        "repository",
+    },
+    "tr": {
+        # Turkish technical writing tends to use a mix of TR and EN terms.
+        # We intentionally include EN loanwords but require multiple matches
+        # to tilt the tone (the 1% threshold in `_tone`).
+        "kubernetes",
+        "docker",
+        "container",
+        "konteyner",
+        "orkestrasyon",
+        "mikroservis",
+        "mikroservisler",
+        "derleyici",
+        "çekirdek",
+        "bellek",
+        "önbellek",
+        "sanallaştırma",
+        "hipervizör",
+        "kümeleme",
+        "küme",
+        "dağıtık",
+        "paralel",
+        "asenkron",
+        "algoritma",
+        "çerçeve",
+    },
+    "es": {
+        "api",
+        "sdk",
+        "kubernetes",
+        "docker",
+        "contenedor",
+        "despliegue",
+        "orquestación",
+        "algoritmo",
+        "compilador",
+        "caché",
+        "microservicio",
+        "virtualización",
+        "asíncrono",
+        "núcleo",
+    },
+    "fr": {
+        "api",
+        "sdk",
+        "kubernetes",
+        "docker",
+        "conteneur",
+        "déploiement",
+        "orchestration",
+        "algorithme",
+        "compilateur",
+        "cache",
+        "microservice",
+        "virtualisation",
+        "asynchrone",
+        "noyau",
+    },
+    "de": {
+        "api",
+        "sdk",
+        "kubernetes",
+        "docker",
+        "container",
+        "bereitstellung",
+        "orchestrierung",
+        "algorithmus",
+        "compiler",
+        "cache",
+        "microservice",
+        "virtualisierung",
+        "asynchron",
+        "kernel",
+    },
 }
+
+# Legacy alias for backward compatibility (other modules may import it).
+TONE_JARGON_WORDS = TONE_JARGON_BY_LANG["en"]
 
 
 def analyze_style(texts: list[str], titles: list[list[str]], language: str) -> StyleProfile:
@@ -57,7 +172,7 @@ def analyze_style(texts: list[str], titles: list[list[str]], language: str) -> S
     post_word_counts = [_word_count(t) for t in texts]
     avg_wc = int(sum(post_word_counts) / max(len(post_word_counts), 1))
 
-    tone = _tone(all_text)
+    tone = _tone(all_text, language)
     addressing = _addressing(all_text, language)
     h2s = [h for sub in titles for h in sub]
     h2_pattern = _h2_pattern(h2s, language)
@@ -86,17 +201,21 @@ def _word_count(text: str) -> int:
 
 def _tone(
     text: str,
+    language: str = "en",
 ) -> Literal["formal", "informal", "technical", "conversational", "journalistic", "mixed"]:
     tokens = re.findall(r"[\w']+", text.lower())
     if not tokens:
         return "mixed"
-    jargon_ratio = sum(1 for t in tokens if t in TONE_JARGON_WORDS) / len(tokens)
+    jargon_set = TONE_JARGON_BY_LANG.get(language, TONE_JARGON_BY_LANG["en"])
+    jargon_ratio = sum(1 for t in tokens if t in jargon_set) / len(tokens)
     sentence_lengths = [len(s.split()) for s in re.split(r"[.!?]+", text) if s.strip()]
     avg_sl = sum(sentence_lengths) / max(len(sentence_lengths), 1)
     contractions = len(re.findall(r"\b\w+['’]\w+\b", text))
     q_marks = text.count("?")
 
-    if jargon_ratio > 0.01:
+    # Raised from 1% to 1.5% so an otherwise conversational piece doesn't flip
+    # to "technical" over a single loanword per ~70 tokens.
+    if jargon_ratio > 0.015:
         return "technical"
     if contractions > 20 and q_marks > 5:
         return "conversational"
@@ -110,7 +229,23 @@ def _tone(
 
 
 def _addressing(text: str, language: str) -> str:
+    """Return the dominant 2nd-person family (family lead) or "impersonal"."""
     lowered = text.lower()
+    families = PRONOUN_FAMILIES.get(language)
+    if families:
+        best_lead: str | None = None
+        best_total = 0
+        for lead, members in families.items():
+            total = 0
+            for m in members:
+                total += len(re.findall(rf"\b{re.escape(m.lower())}\b", lowered))
+            if total > best_total:
+                best_total = total
+                best_lead = lead
+        if best_lead and best_total > 0:
+            return best_lead
+        return "impersonal"
+    # Fallback for languages without a family map — use legacy behavior.
     candidates = PRONOUNS.get(language, PRONOUNS["en"])
     counts: Counter[str] = Counter()
     for p in candidates:

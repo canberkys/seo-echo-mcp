@@ -92,6 +92,25 @@ async def test_check_duplicates_flags_overlapping_post(site_profile_en):
 
 
 @pytest.mark.asyncio
+async def test_check_duplicates_tr_stemmer_catches_inflections(site_profile_tr):
+    """Stemmer should collapse 'snapshot'ları' vs 'snapshot' to the same token."""
+    site_profile_tr.existing_posts = [
+        PostSample(
+            url="https://canberkki.com/vmware-snapshot-nedir/",
+            title="VMware Snapshot Nedir?",
+            h2s=[],
+            word_count=900,
+            category="VMware",
+            snippet="VMware snapshot'ı ve snapshot yönetimi hakkında rehber.",
+        ),
+    ]
+    report = await check_duplicates("vmware snapshot'ları nasıl silinir", site_profile_tr)
+    # Without stemming this would score ~0 because tokens differ.
+    assert len(report.matches) == 1
+    assert report.matches[0].overlap_score > 0.3
+
+
+@pytest.mark.asyncio
 async def test_check_duplicates_safe_when_no_overlap(site_profile_en):
     site_profile_en.existing_posts = [
         PostSample(

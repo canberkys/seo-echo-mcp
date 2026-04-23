@@ -23,6 +23,8 @@ _USER_AGENT = (
     "(Mozilla/5.0 compatible; +https://github.com/canberkys/seo-echo-mcp)"
 )
 _MAX_CONCURRENCY = 5
+_MAX_RESPONSE_BYTES = 5 * 1024 * 1024
+_HTTPX_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10)
 
 
 async def analyze_competitors(
@@ -64,6 +66,7 @@ async def analyze_competitors(
         headers={"User-Agent": _USER_AGENT},
         follow_redirects=True,
         timeout=httpx.Timeout(20.0, connect=10.0),
+        limits=_HTTPX_LIMITS,
     ) as client:
         if urls:
             serp_seeds = [
@@ -122,7 +125,15 @@ async def _fetch_many(urls: list[str], client: httpx.AsyncClient) -> list[tuple[
                 return (u, None)
             if r.status_code != 200:
                 return (u, None)
-            return (u, r.text)
+            content_length = int(r.headers.get("content-length") or 0)
+            if content_length and content_length > _MAX_RESPONSE_BYTES:
+                logger.warning("analyze_competitors skip oversized url=%s", u)
+                return (u, None)
+            text = r.text
+            if len(text.encode("utf-8", errors="ignore")) > _MAX_RESPONSE_BYTES:
+                logger.warning("analyze_competitors skip oversized url=%s (decoded)", u)
+                return (u, None)
+            return (u, text)
 
     return await asyncio.gather(*[_one(u) for u in urls])
 

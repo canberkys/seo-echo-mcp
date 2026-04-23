@@ -10,6 +10,7 @@ and saves the final `.md` to disk with its Write tool.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from seo_echo_mcp.config.templates.loader import load as load_templates
@@ -22,6 +23,8 @@ from seo_echo_mcp.schemas import (
     apply_voice_overrides,
 )
 from seo_echo_mcp.tools.generate_slug import generate_slug
+
+logger = logging.getLogger(__name__)
 
 
 async def prepare_draft_skeleton(
@@ -57,6 +60,14 @@ async def prepare_draft_skeleton(
     keyword = target_keyword or outline.keyword
     language = outline.language
     load_templates(language)  # validate language is supported / preload module
+    logger.info(
+        "prepare_draft_skeleton keyword=%r lang=%s sections=%d has_faq=%s has_schema=%s",
+        keyword,
+        language,
+        len(outline.sections),
+        faq_section is not None,
+        schema_jsonld is not None,
+    )
 
     title = _safe_pick(outline.suggested_titles, selected_title_index, f"{keyword}")
     meta_description = _safe_pick(

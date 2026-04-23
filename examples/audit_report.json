@@ -1,0 +1,128 @@
+{
+  "overall_score": 82,
+  "passed_count": 11,
+  "warning_count": 3,
+  "error_count": 0,
+  "checks": [
+    {
+      "name": "word_count",
+      "pass": true,
+      "severity": "info",
+      "actual": 1710,
+      "expected": "1215-2025",
+      "message": "Word count in range."
+    },
+    {
+      "name": "h2_format",
+      "pass": true,
+      "severity": "info",
+      "actual": 1.0,
+      "expected": ">=0.70 for pattern 'statement'",
+      "message": "H2s align with site pattern 'statement'."
+    },
+    {
+      "name": "em_dash_usage",
+      "pass": true,
+      "severity": "info",
+      "actual": 2,
+      "expected": null,
+      "message": "Em-dash usage matches site style."
+    },
+    {
+      "name": "ai_cliches",
+      "pass": false,
+      "severity": "warning",
+      "actual": ["delve into", "in conclusion"],
+      "expected": 0,
+      "message": "AI-cliché phrases detected (2). Rewrite: delve into, in conclusion…"
+    },
+    {
+      "name": "addressing_consistency",
+      "pass": true,
+      "severity": "info",
+      "actual": "you",
+      "expected": "you",
+      "message": "Addressing matches site."
+    },
+    {
+      "name": "headings_hierarchy",
+      "pass": true,
+      "severity": "info",
+      "actual": "h1=yes, h2=6, h3=4",
+      "expected": "exactly 1 H1, H3s only under H2",
+      "message": "Heading hierarchy is valid."
+    },
+    {
+      "name": "paragraph_length",
+      "pass": true,
+      "severity": "info",
+      "actual": 2.4,
+      "expected": 2.8,
+      "message": "Paragraph length matches site."
+    },
+    {
+      "name": "sentence_length",
+      "pass": true,
+      "severity": "info",
+      "actual": 13.9,
+      "expected": 14.2,
+      "message": "Sentence length matches site."
+    },
+    {
+      "name": "image_alt_coverage",
+      "pass": true,
+      "severity": "info",
+      "actual": 0,
+      "expected": 0,
+      "message": "All images have alt text."
+    },
+    {
+      "name": "internal_links_count",
+      "pass": true,
+      "severity": "info",
+      "actual": 4,
+      "expected": ">=3",
+      "message": "internal links count meets target."
+    },
+    {
+      "name": "external_citations_count",
+      "pass": false,
+      "severity": "warning",
+      "actual": 2,
+      "expected": ">=3",
+      "message": "external citations count 2 below target 3."
+    },
+    {
+      "name": "keyword_in_title",
+      "pass": true,
+      "severity": "info",
+      "actual": "Kubernetes Ingress: A Complete Guide for 2026",
+      "expected": "kubernetes ingress",
+      "message": "Keyword present in title."
+    },
+    {
+      "name": "keyword_density",
+      "pass": false,
+      "severity": "warning",
+      "actual": 0.35,
+      "expected": "0.5-2.0%",
+      "message": "Keyword density 0.35% outside target band."
+    },
+    {
+      "name": "keyword_in_first_paragraph",
+      "pass": true,
+      "severity": "info",
+      "actual": null,
+      "expected": "kubernetes ingress",
+      "message": "Keyword present in opening paragraph."
+    }
+  ],
+  "recommendations": [
+    "AI-cliché phrases detected (2). Rewrite: delve into, in conclusion…",
+    "external citations count 2 below target 3.",
+    "Keyword density 0.35% outside target band."
+  ],
+  "reading_time_minutes": 9,
+  "word_count": 1710,
+  "detected_language": "en"
+}

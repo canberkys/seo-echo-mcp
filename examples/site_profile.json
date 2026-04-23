@@ -1,0 +1,51 @@
+{
+  "domain": "example-tech-blog.test",
+  "url": "https://example-tech-blog.test",
+  "language": "en",
+  "language_confidence": "high",
+  "sampled_at": "2026-04-23T10:00:00+00:00",
+  "sample_count": 8,
+  "sample_urls": [
+    "https://example-tech-blog.test/posts/kubernetes-intro",
+    "https://example-tech-blog.test/posts/docker-networking",
+    "https://example-tech-blog.test/posts/observability-101",
+    "https://example-tech-blog.test/posts/terraform-modules",
+    "https://example-tech-blog.test/posts/ci-cd-tips",
+    "https://example-tech-blog.test/posts/vault-secrets",
+    "https://example-tech-blog.test/posts/load-balancing",
+    "https://example-tech-blog.test/posts/incident-response"
+  ],
+  "categories": ["DevOps", "Infrastructure", "Tutorials"],
+  "topics": [
+    "kubernetes",
+    "docker",
+    "observability",
+    "infrastructure",
+    "automation",
+    "monitoring",
+    "security",
+    "deployment"
+  ],
+  "style": {
+    "average_word_count": 1620,
+    "tone": "technical",
+    "addressing": "you",
+    "h2_pattern": "statement",
+    "uses_lists": true,
+    "uses_code_blocks": true,
+    "avg_paragraph_sentences": 2.8,
+    "em_dash_frequency": "occasional",
+    "avg_sentence_words": 14.2
+  },
+  "existing_posts": [
+    {
+      "url": "https://example-tech-blog.test/posts/kubernetes-intro",
+      "title": "Kubernetes Basics Every Team Should Know",
+      "h2s": ["What Kubernetes solves", "Core objects", "Deployment workflow"],
+      "word_count": 1850,
+      "category": "DevOps",
+      "snippet": "Kubernetes has become the default way teams ship containerized workloads at scale. This post walks through the handful of concepts you need to be fluent in before you touch a manifest.",
+      "published_at": "2026-01-14T09:30:00+00:00"
+    }
+  ]
+}

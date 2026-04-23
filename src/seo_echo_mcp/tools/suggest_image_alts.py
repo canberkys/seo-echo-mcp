@@ -2,15 +2,43 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import PurePosixPath
 from urllib.parse import urlparse
 
+from seo_echo_mcp.config.templates.loader import load as load_templates
 from seo_echo_mcp.schemas import ImageAltReport, ImageAltSuggestion
 from seo_echo_mcp.utils.text import markdown_to_plain, strip_frontmatter
 
+logger = logging.getLogger(__name__)
+
 _IMG_RE = re.compile(r"!\[(?P<alt>[^\]]*)\]\((?P<src>[^)\s]+)(?:\s+\"[^\"]*\")?\)")
-_WEAK_ALTS = {"image", "img", "picture", "photo", "screenshot", "logo", "icon"}
+# Generic alt words considered "weak" regardless of language — these all read
+# the same or as direct loanwords in TR/DE/FR/ES and carry no information.
+_WEAK_ALTS = {
+    # English
+    "image",
+    "img",
+    "picture",
+    "photo",
+    "screenshot",
+    "logo",
+    "icon",
+    # Turkish
+    "resim",
+    "görsel",
+    "fotoğraf",
+    "ekran",
+    "görüntü",
+    # Spanish
+    "imagen",
+    "captura",
+    # Shared loanwords (es/de/fr/pt all share "foto" with es)
+    "foto",
+    # German
+    "bild",
+}
 _MIN_ALT_WORDS = 2
 
 
@@ -36,7 +64,10 @@ async def suggest_image_alts(
     Returns:
         ImageAltReport with one ImageAltSuggestion per image.
     """
+    if not content_markdown or not content_markdown.strip():
+        raise ValueError("`content_markdown` must be a non-empty string.")
     body = strip_frontmatter(content_markdown)
+    tpl = load_templates(language)
     items: list[ImageAltSuggestion] = []
     for position, match in enumerate(_IMG_RE.finditer(body), start=1):
         alt = match.group("alt").strip()
@@ -44,11 +75,11 @@ async def suggest_image_alts(
         status = _classify(alt, src)
         context = _context_before(body, match.start())
         suggestions = _build_suggestions(
+            tpl=tpl,
             filename_stem=_stem_from_src(src),
             keyword=target_keyword,
             context=context,
             existing_alt=alt,
-            language=language,
         )
         items.append(
             ImageAltSuggestion(
@@ -63,6 +94,13 @@ async def suggest_image_alts(
 
     missing = sum(1 for i in items if i.status == "missing")
     weak = sum(1 for i in items if i.status == "weak")
+    logger.info(
+        "suggest_image_alts total=%d missing=%d weak=%d lang=%s",
+        len(items),
+        missing,
+        weak,
+        language,
+    )
     return ImageAltReport(
         image_count=len(items),
         missing_count=missing,
@@ -105,29 +143,30 @@ def _context_before(body: str, offset: int) -> str:
 
 
 def _build_suggestions(
+    tpl,
     filename_stem: str,
     keyword: str | None,
     context: str,
     existing_alt: str,
-    language: str,
 ) -> list[str]:
+    """Build alt-text candidates using the language-specific IMAGE_ALT_TEMPLATES."""
+    templates = tpl.IMAGE_ALT_TEMPLATES
     pieces: list[str] = []
     stem_clean = filename_stem.strip()
     if stem_clean:
-        pieces.append(stem_clean.capitalize())
+        pieces.append(templates["filename"].format(stem=stem_clean.capitalize()))
     if keyword:
         kw = keyword.strip()
         if kw and (not stem_clean or kw.lower() not in stem_clean.lower()):
             pieces.append(kw)
             if stem_clean:
-                pieces.append(f"{kw} — {stem_clean}")
-    # Derive a topic cue from the nearest heading or sentence in the context
+                pieces.append(templates["keyword_with_stem"].format(keyword=kw, stem=stem_clean))
     topic = _topic_from_context(context)
     if topic:
         if keyword:
-            pieces.append(f"{keyword}: {topic}")
+            pieces.append(templates["keyword_with_topic"].format(keyword=keyword, topic=topic))
         else:
-            pieces.append(topic)
+            pieces.append(templates["topic_only"].format(topic=topic))
     # Filter: drop empties + duplicates while preserving order
     seen: set[str] = set()
     out: list[str] = []

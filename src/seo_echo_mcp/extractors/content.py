@@ -8,13 +8,37 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import Any, TypedDict
 
 import trafilatura
 from selectolax.parser import HTMLParser
 
 
-def extract_content(html: str) -> dict[str, Any]:
+class ExtractedPost(TypedDict):
+    """Shape returned by `extract_content` — one blog post."""
+
+    title: str
+    main_text: str
+    word_count: int
+    h2s: list[str]
+    category: str | None
+    published_at: str | None
+
+
+class ExtractedStructure(TypedDict):
+    """Shape returned by `extract_h2s_and_structure` — one SERP competitor."""
+
+    title: str
+    snippet: str
+    h2s: list[str]
+    word_count: int
+    has_schema: bool
+    schema_types: list[str]
+    internal_link_count: int
+    external_link_count: int
+
+
+def extract_content(html: str) -> ExtractedPost:
     """Return title, main text, word count, H2 list, category, published date."""
     main_text = (
         trafilatura.extract(html, include_comments=False, include_tables=False, favor_recall=True)
@@ -39,7 +63,7 @@ def extract_content(html: str) -> dict[str, Any]:
     }
 
 
-def extract_h2s_and_structure(html: str) -> dict[str, Any]:
+def extract_h2s_and_structure(html: str) -> ExtractedStructure:
     """Extract structural info for SERP competitor analysis."""
     tree = HTMLParser(html)
     h2s = [n.text(strip=True) for n in tree.css("h2") if n.text(strip=True)]

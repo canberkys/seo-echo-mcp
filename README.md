@@ -7,6 +7,7 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
 [![Test](https://github.com/canberkys/seo-echo-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/canberkys/seo-echo-mcp/actions/workflows/test.yml)
 [![GitHub release](https://img.shields.io/github/v/release/canberkys/seo-echo-mcp)](https://github.com/canberkys/seo-echo-mcp/releases)
+[![codecov](https://codecov.io/gh/canberkys/seo-echo-mcp/graph/badge.svg)](https://codecov.io/gh/canberkys/seo-echo-mcp)
 
 [Features](#features) • [Installation](#installation) • [IDE Setup](#ide-setup) • [API Reference](#api-reference) • [Contributing](#contributing)
 
@@ -73,7 +74,7 @@ No manual install required — run it straight from GitHub with `uvx`:
 uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
 ```
 
-`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.3.0` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
+`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.4.0` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
 
 <details>
 <summary>Other installation methods</summary>
@@ -235,51 +236,61 @@ Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
 
 </details>
 
-> **Tip:** To pin a specific release add `@v0.3.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.3.0`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
+> **Tip:** To pin a specific release add `@v0.4.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.4.0`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
 
 > **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
 ## API Reference
 
-### `analyze_site(url, max_samples=12)`
+Every tool is `async def`. Realistic sample outputs live in [`examples/`](examples/).
 
-Crawls `url`, samples up to `max_samples` posts, and returns a `SiteProfile`:
+### Research & strategy
 
-```json
-{
-  "domain": "myblog.com",
-  "language": "en",
-  "language_confidence": "high",
-  "categories": ["Guides", "Tutorials"],
-  "topics": ["python", "testing", "async"],
-  "style": {
-    "average_word_count": 1400,
-    "tone": "conversational",
-    "addressing": "you",
-    "h2_pattern": "question",
-    "em_dash_frequency": "rare"
-  },
-  "existing_posts": [ ... ]
-}
-```
+**`analyze_site(url=None, urls=None, max_samples=12, cache_ttl=86400, bypass_cache=False) → SiteProfile`**
+Crawl a blog and return its voice profile. Pass `url` for auto-discovery via sitemap/feed, or `urls=[...]` to skip discovery (useful for blocked/JS-rendered sites). Results are cached at `~/.cache/seo-echo-mcp/<domain>.json` for 24h by default — override with `SEO_ECHO_CACHE_DIR` env or `bypass_cache=True`. See [`examples/site_profile.json`](examples/site_profile.json).
 
-### `analyze_competitors(keyword=None, urls=None, language, country, top_n=10)`
+**`analyze_competitors(keyword=None, urls=None, language="en", country="us", top_n=10) → CompetitorAnalysis`**
+Fetch and structure top SERP results (or a given URL list). SERP provider order: Google CSE (if `GOOGLE_CSE_API_KEY` + `GOOGLE_CSE_ID` set) → DuckDuckGo HTML → Bing HTML.
 
-Analyzes competitor content. Either `keyword` (for SERP search) or `urls` (direct list) is required. Returns `CompetitorAnalysis` with per-page structure and aggregate insights.
+**`detect_content_gaps(site_profile, competitor_analysis, min_coverage=2) → ContentGapReport`**
+Topics competitors cover but your site doesn't, ranked by coverage count. See [`examples/content_gap_report.json`](examples/content_gap_report.json).
 
-SERP providers, in order of preference:
+**`check_duplicates(proposed, site_profile, threshold=0.3) → DuplicateReport`**
+Jaccard similarity over stopword-filtered tokens (stemmed for TR). Flags existing posts that overlap your proposed keyword/title and labels the verdict `safe` / `caution` / `duplicate`.
 
-1. **Google Custom Search** (if `GOOGLE_CSE_API_KEY` + `GOOGLE_CSE_ID` env vars set)
-2. **DuckDuckGo HTML** (default)
-3. **Bing HTML** (fallback if DuckDuckGo is rate-limited)
+### Structure & metadata
 
-### `generate_outline(keyword, site_profile, competitor_analysis=None, target_word_count=None, new_category=None)`
+**`suggest_titles(keyword, site_profile, competitor_analysis=None, count=10) → TitleSuggestions`**
+10 ranked title candidates, style-matched to the site's H2 pattern. If competitors are provided, the most-common listicle N is honored (e.g. `Top 10 …` instead of hard-coded 7).
 
-Produces an `Outline` with 5–12 sections, 3 title candidates, 3 meta descriptions, recommended internal link targets, and citation-research topic stubs. Rule-based — no LLM calls inside the tool.
+**`generate_meta_variations(keyword, title, language="en") → MetaVariations`**
+5 meta descriptions across 5 angles (problem-solution, question, benefit, curiosity, action), all 140–160 chars.
 
-### `audit_content(content_markdown, site_profile, target_keyword=None, target_meta_description=None)`
+**`generate_slug(title, language="en", max_length=60) → SlugResult`**
+URL-safe slug with language-aware transliteration (`ı→i`, `ü→ue`, `ñ→n`, …), plus up to two shorter alternatives (stopword-stripped, truncated).
 
-Runs 16 rule-based checks (word count, H2 format, em-dash usage, AI clichés, keyword density, heading hierarchy, image alt coverage, …). Returns an `AuditReport` with an overall score 0–100, per-check results, and prioritized recommendations.
+**`generate_outline(keyword, site_profile, competitor_analysis=None, target_word_count=None, new_category=None) → Outline`**
+5–12 sections with unique H2s (language-specific), 3 title candidates, 3 meta descriptions, internal link targets, citation-research topic stubs. Rule-based. See [`examples/outline.json`](examples/outline.json).
+
+**`generate_faq_section(keyword, language="en", competitor_analysis=None, count=5) → FaqSection`**
+PAA-style FAQ markdown block + FAQPage JSON-LD. Question-shaped competitor H2s are folded in when available.
+
+**`generate_schema_jsonld(schema_type, title, description, url, author_name, published_at, image_url=None, keywords=None, language="en") → SchemaJsonLd`**
+Article / BlogPosting / HowTo / Review JSON-LD + ready-to-paste `<script>` snippet.
+
+### Draft scaffolding & post-draft quality
+
+**`prepare_draft_skeleton(outline, site_profile, target_keyword=None, slug=None, faq_section=None, schema_jsonld=None, selected_title_index=0, selected_meta_index=0, voice_overrides=None) → DraftSkeleton`**
+Assembles the full markdown skeleton (frontmatter + `<!-- WRITE -->` directives per section + optional FAQ + JSON-LD). The host LLM fills each directive and saves the final `.md`. See [`examples/draft_skeleton.md`](examples/draft_skeleton.md).
+
+**`audit_content(content_markdown, site_profile, target_keyword=None, target_meta_description=None, voice_overrides=None) → AuditReport`**
+16 rule-based checks (word count, H2 format, em-dash, AI clichés, keyword density, heading hierarchy, image alt coverage, …). Score 0–100 with prioritized recommendations. See [`examples/audit_report.json`](examples/audit_report.json).
+
+**`readability_report(content_markdown, language="en") → ReadabilityReport`**
+Per-language formula (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES, generic fallback) + passive-voice ratio for EN/TR/DE.
+
+**`suggest_image_alts(content_markdown, target_keyword=None, language="en") → ImageAltReport`**
+Flags missing/weak alt text per image and proposes replacements from the filename stem, the target keyword, and the nearest preceding paragraph. Alt template is language-aware.
 
 ## Content Creation Workflow with Claude Code
 
@@ -330,12 +341,60 @@ edit `src/seo_echo_mcp/config/ai_cliches.py`, add your ISO 639-1 language code a
 **Adding outline templates for a new language:**
 create `src/seo_echo_mcp/config/templates/<lang>.py` with `TITLE_TEMPLATES`, `META_TEMPLATES`, `H2_TEMPLATES`, and `CTA`, then add the code to `SUPPORTED` in `templates/loader.py`.
 
+## Use as a Python library
+
+The tools are plain async functions. You can import them and call them without an MCP host, e.g. from a Django management command, a CI step, or a notebook.
+
+```python
+import asyncio
+from seo_echo_mcp.tools.analyze_site import analyze_site
+from seo_echo_mcp.tools.generate_outline import generate_outline
+from seo_echo_mcp.tools.audit_content import audit_content
+
+async def main():
+    profile = await analyze_site("myblog.com", max_samples=8)
+    outline = await generate_outline("async python", profile)
+    # (draft would be written by your prose source — LLM, human, template, …)
+    draft_md = open("draft.md").read()
+    report = await audit_content(draft_md, profile, target_keyword="async python")
+    print(report.overall_score, report.recommendations)
+
+asyncio.run(main())
+```
+
+Every tool returns a Pydantic model; call `.model_dump_json()` for JSON or `.model_dump()` for a plain dict. Inputs that are Pydantic models (e.g. `SiteProfile`) also accept dicts — Pydantic validates on the way in.
+
+## Troubleshooting
+
+**Tools don't show up in `/mcp`.** Confirm you picked the right scope: `--scope user` puts the registration in `~/.claude.json`, visible from any directory; `--scope local` is only visible in the directory where you ran the command. Run `claude mcp list` to see what's registered.
+
+**`analyze_site` returns `Unable to reach URL`.** The target site may be blocking non-browser User-Agents or rate-limiting. Try passing an explicit post list via `urls=[...]` to skip sitemap discovery.
+
+**`analyze_competitors` returns no results.** DuckDuckGo rate-limits aggressively. Set `GOOGLE_CSE_API_KEY` + `GOOGLE_CSE_ID` env vars to use Google Custom Search instead (best quality), or pass `urls=[...]` for a manual competitor list.
+
+**Cache feels stale.** Clear `~/.cache/seo-echo-mcp/` or pass `bypass_cache=True` for a one-off fresh run. Override the path with `SEO_ECHO_CACHE_DIR=/tmp/seo-echo-cache`.
+
+**Draft keeps using em-dashes / wrong tone.** Pass `voice_overrides={"em_dash_frequency": "never"}` (or any other `StyleProfile` field) to `prepare_draft_skeleton` and `audit_content`. See the "Overriding voice heuristics" section above.
+
+**See more detail in IDE logs.** Set `SEO_ECHO_LOG_LEVEL=DEBUG` on the IDE's MCP command; every tool emits start/finish milestones to stderr (stdout is reserved for the MCP stdio protocol).
+
+## What this MCP does NOT do
+
+Expectation management:
+
+- **It does not write prose.** Every tool is rule/template-based. The host LLM (Claude / Cursor / etc.) generates the actual text after consuming the outline + skeleton.
+- **It does not call external LLM APIs** from inside any tool. No hidden OpenAI / Anthropic / Gemini calls. No API keys required by default (optional Google CSE only).
+- **It does not store credentials.** The only disk write is an opt-in cache at `~/.cache/seo-echo-mcp/`.
+- **It is not a keyword research tool.** For search volume, SERP CTR, backlinks, etc., integrate a dedicated tool (e.g. Ahrefs, Semrush) — `seo-echo-mcp` focuses on voice + structure.
+- **It is not a plagiarism or fact-checker.** Audit checks style and SEO hygiene; it cannot verify claims.
+
 ## Roadmap
 
 - [x] v0.2 — Content creator expansion (9 new tools, 13 total)
 - [x] v0.3 — Manual URL list input for `analyze_site`, persistent cache, `suggest_image_alts`, TR/DE passive voice
-- [ ] v0.4 — Multi-site profile comparison
-- [ ] v0.4 — Semantic similarity in `check_duplicates` (stemmer + TF-IDF)
+- [x] v0.4 — Language-aware fallbacks (outline + image alts), TR stemmer, stratified sampling, pronoun families, cache path hardening, CONTRIBUTING/SECURITY/CODE_OF_CONDUCT, examples/
+- [ ] v0.5 — Multi-site profile comparison
+- [ ] v0.5 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
 
 ## License
 

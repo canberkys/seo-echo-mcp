@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import unicodedata
 
 from seo_echo_mcp.config.slug_rules import STOPWORDS, TRANSLITERATE
 from seo_echo_mcp.schemas import SlugResult
+
+logger = logging.getLogger(__name__)
 
 
 async def generate_slug(title: str, language: str = "en", max_length: int = 60) -> SlugResult:
@@ -24,9 +27,16 @@ async def generate_slug(title: str, language: str = "en", max_length: int = 60) 
         SlugResult with primary slug and two progressively shorter alternatives
         (one with stopwords removed, one keyword-only truncated).
     """
+    if not title or not title.strip():
+        raise ValueError("`title` must be a non-empty string.")
     primary = _slugify(title, language, max_length=max_length)
+    if not primary:
+        raise ValueError(
+            f"Title {title!r} does not produce a valid slug (all characters stripped)."
+        )
     no_stop = _slugify(title, language, max_length=max_length, drop_stopwords=True)
     short = _truncate_slug(no_stop or primary, 40)
+    logger.info("generate_slug lang=%s primary=%s", language, primary)
     alternatives: list[str] = []
     if no_stop and no_stop != primary:
         alternatives.append(no_stop)

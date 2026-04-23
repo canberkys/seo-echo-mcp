@@ -51,3 +51,26 @@ async def test_outline_preserves_keyword_casing(site_profile_tr):
     joined = " ".join(s.h2 for s in outline.sections)
     assert "VMware vMotion" in joined
     assert "Vmware Vmotion" not in joined
+
+
+@pytest.mark.asyncio
+async def test_outline_tr_synthetic_fallbacks_are_turkish(site_profile_tr):
+    """Long TR outline must not leak English synthetic H2s ('Advanced X techniques')."""
+    # target_word_count=3000 → 12 sections → template pool exhausts → synthetic kicks in.
+    outline = await generate_outline("VMware vMotion", site_profile_tr, target_word_count=3000)
+    joined = " ".join(s.h2 for s in outline.sections)
+    # English synthetic fragments that used to leak through:
+    for leaked in ("in practice", "Advanced", "tips and tricks", "in production", "use cases"):
+        assert leaked not in joined, f"English synthetic H2 leaked: '{leaked}' in {joined!r}"
+    # And must_cover items should be Turkish for TR site.
+    intro_must_cover = " ".join(outline.sections[0].must_cover)
+    assert "Define" not in intro_must_cover
+    assert "Why it matters right now" not in intro_must_cover
+
+
+@pytest.mark.asyncio
+async def test_outline_tr_must_cover_is_turkish(site_profile_tr):
+    outline = await generate_outline("docker", site_profile_tr)
+    summary_must_cover = " ".join(outline.sections[-1].must_cover)
+    assert "Key takeaways" not in summary_must_cover
+    assert "Next action" not in summary_must_cover

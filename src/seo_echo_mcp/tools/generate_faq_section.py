@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 
 from seo_echo_mcp.config.templates.loader import load as load_templates
 from seo_echo_mcp.schemas import CompetitorAnalysis, FaqItem, FaqSection
+
+logger = logging.getLogger(__name__)
 
 
 async def generate_faq_section(
@@ -36,8 +39,13 @@ async def generate_faq_section(
         FaqSection with items, a ready-to-embed markdown block, and a
         FAQPage JSON-LD string.
     """
+    if not keyword or not keyword.strip():
+        raise ValueError("`keyword` must be a non-empty string.")
     tpl = load_templates(language)
     questions = _collect_questions(keyword, tpl, competitor_analysis, count)
+    logger.info(
+        "generate_faq_section keyword=%r lang=%s items=%d", keyword, language, len(questions)
+    )
     items = [
         FaqItem(
             position=i + 1,

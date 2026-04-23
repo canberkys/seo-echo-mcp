@@ -68,3 +68,19 @@ async def test_analyze_site_cache_hit_avoids_refetch(tmp_path, monkeypatch):
         second = await mod.analyze_site(urls=["https://cached.test/a"], cache_ttl=3600)
     assert second.domain == first.domain
     assert second.sampled_at == first.sampled_at  # same cached payload
+
+
+def test_sanitize_cache_key_blocks_path_traversal():
+    from seo_echo_mcp.tools.analyze_site import _sanitize_cache_key
+
+    # Path-traversal-like inputs must not escape the cache dir.
+    assert _sanitize_cache_key("../evil") == "evil"
+    assert _sanitize_cache_key("../../root") == "root"
+    assert _sanitize_cache_key("/etc/passwd") == "passwd"
+    # Plain domains stay intact.
+    assert _sanitize_cache_key("canberkki.com") == "canberkki.com"
+    assert _sanitize_cache_key("sub.example.co.uk") == "sub.example.co.uk"
+    # Pathological inputs fall back to a stable label.
+    assert _sanitize_cache_key("") == "unknown"
+    assert _sanitize_cache_key("//") == "unknown"
+    assert _sanitize_cache_key("   ") == "unknown"

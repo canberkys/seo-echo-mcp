@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from seo_echo_mcp.schemas import ReadabilityReport
@@ -11,6 +12,8 @@ from seo_echo_mcp.utils.text import (
     strip_frontmatter,
     tokenize_words,
 )
+
+logger = logging.getLogger(__name__)
 
 _PASSIVE_EN = re.compile(
     r"\b(?:am|is|are|was|were|be|been|being)\b\s+\w+(?:ed|en)\b", re.IGNORECASE
@@ -46,6 +49,8 @@ async def readability_report(content_markdown: str, language: str = "en") -> Rea
     Returns:
         ReadabilityReport with formula used, score, verdict, and supporting stats.
     """
+    if not content_markdown or not content_markdown.strip():
+        raise ValueError("`content_markdown` must be a non-empty string.")
     body = strip_frontmatter(content_markdown)
     plain = markdown_to_plain(body)
     words = tokenize_words(plain)
@@ -65,6 +70,13 @@ async def readability_report(content_markdown: str, language: str = "en") -> Rea
         passive_ratio = passive_hits / sentence_count if sentence_count else 0.0
 
     score, formula, verdict, grade = _score(language, avg_sentence_words, avg_syllables, words)
+    logger.info(
+        "readability_report formula=%s score=%.1f verdict=%s words=%d",
+        formula,
+        score,
+        verdict,
+        word_count,
+    )
 
     return ReadabilityReport(
         language=language,

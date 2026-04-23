@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Literal
 
 from seo_echo_mcp.schemas import SchemaJsonLd
+
+logger = logging.getLogger(__name__)
 
 SchemaType = Literal["Article", "BlogPosting", "HowTo", "Review"]
 
@@ -35,6 +38,11 @@ async def generate_schema_jsonld(
     Returns:
         SchemaJsonLd with the JSON string and a ready-to-paste <script> snippet.
     """
+    if not title or not title.strip():
+        raise ValueError("`title` must be a non-empty string.")
+    if not url or not url.strip():
+        raise ValueError("`url` must be a non-empty string.")
+    logger.info("generate_schema_jsonld type=%s lang=%s", schema_type, language)
     data = {
         "@context": "https://schema.org",
         "@type": schema_type,

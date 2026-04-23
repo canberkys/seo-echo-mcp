@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict
 
 from seo_echo_mcp.schemas import CompetitorAnalysis, ContentGap, ContentGapReport, SiteProfile
+
+logger = logging.getLogger(__name__)
 
 
 async def detect_content_gaps(
@@ -28,6 +31,11 @@ async def detect_content_gaps(
         ContentGapReport with per-gap coverage counts and suggested angles.
     """
     site_vocab = _site_vocab(site_profile)
+    logger.info(
+        "detect_content_gaps site=%s competitors=%d",
+        site_profile.domain,
+        len(competitor_analysis.results),
+    )
     topic_to_urls: dict[str, set[str]] = defaultdict(set)
     for entry in competitor_analysis.results:
         for h2 in entry.h2s:

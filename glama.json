@@ -1,0 +1,44 @@
+{
+  "$schema": "https://glama.ai/schemas/mcp-server.json",
+  "name": "seo-echo-mcp",
+  "description": "Voice-preserving SEO content MCP server for Claude Code, Cursor & Desktop. 14 rule-based tools, language-agnostic, no external LLM calls.",
+  "homepage": "https://github.com/canberkys/seo-echo-mcp",
+  "repository": "https://github.com/canberkys/seo-echo-mcp",
+  "license": "MIT",
+  "author": {
+    "name": "Canberk Kılıçarslan",
+    "url": "https://github.com/canberkys"
+  },
+  "tags": [
+    "seo",
+    "content-generation",
+    "voice",
+    "writing-tools",
+    "language-agnostic",
+    "schema-org",
+    "json-ld",
+    "claude",
+    "cursor",
+    "windsurf"
+  ],
+  "install": {
+    "command": "uvx",
+    "args": ["--from", "git+https://github.com/canberkys/seo-echo-mcp", "seo-echo-mcp"]
+  },
+  "tools": [
+    {"name": "analyze_site", "description": "Crawl a blog and extract language, topics, style profile, H2 patterns."},
+    {"name": "analyze_competitors", "description": "Fetch top SERP results (DuckDuckGo → Bing fallback) and extract structure."},
+    {"name": "detect_content_gaps", "description": "Topics competitors cover but the site doesn't."},
+    {"name": "check_duplicates", "description": "Jaccard-based overlap warning against existing posts."},
+    {"name": "suggest_titles", "description": "10 SEO title candidates ranked by site voice + competitor format."},
+    {"name": "generate_meta_variations", "description": "5 meta descriptions across 5 angles (140-160 chars)."},
+    {"name": "generate_slug", "description": "URL-safe slug with language-aware transliteration."},
+    {"name": "generate_outline", "description": "SEO outline matched to your voice + competitor H2 topics."},
+    {"name": "generate_faq_section", "description": "PAA-style FAQ block + FAQPage JSON-LD."},
+    {"name": "generate_schema_jsonld", "description": "Article / BlogPosting / HowTo / Review JSON-LD."},
+    {"name": "prepare_draft_skeleton", "description": "Full markdown skeleton with frontmatter + <!-- WRITE --> directives per section."},
+    {"name": "audit_content", "description": "Scores a draft against style profile + 16 SEO checks."},
+    {"name": "readability_report", "description": "Per-language readability (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES) + passive voice."},
+    {"name": "suggest_image_alts", "description": "Flags missing/weak alt text and proposes replacements."}
+  ]
+}

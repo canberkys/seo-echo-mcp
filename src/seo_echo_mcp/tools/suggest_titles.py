@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter
 from datetime import datetime, timezone
@@ -13,6 +14,8 @@ from seo_echo_mcp.schemas import (
     TitleSuggestion,
     TitleSuggestions,
 )
+
+logger = logging.getLogger(__name__)
 
 _SERP_CHAR_LIMIT = 60
 _PATTERNS_ORDER = (
@@ -51,10 +54,18 @@ async def suggest_titles(
     Returns:
         TitleSuggestions with ranked items and a primary recommendation.
     """
+    if not keyword or not keyword.strip():
+        raise ValueError("`keyword` must be a non-empty string.")
     tpl = load_templates(site_profile.language)
     year = str(datetime.now(timezone.utc).year)
     # Preserve user casing — users write "VMware vMotion" correctly.
     keyword_display = keyword
+    logger.info(
+        "suggest_titles keyword=%r lang=%s count=%d",
+        keyword,
+        site_profile.language,
+        count,
+    )
 
     dominant = competitor_analysis.insights.dominant_format if competitor_analysis else None
     site_pattern = site_profile.style.h2_pattern

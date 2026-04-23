@@ -28,6 +28,9 @@ _USER_AGENT = f"seo-echo-mcp/{__version__} (+https://github.com/canberkys/seo-ec
 _MAX_CONCURRENCY = 5
 _DEFAULT_CACHE_TTL = 24 * 60 * 60  # 24 hours
 _CACHE_DIR = Path(os.environ.get("SEO_ECHO_CACHE_DIR", Path.home() / ".cache" / "seo-echo-mcp"))
+_MAX_RESPONSE_BYTES = 5 * 1024 * 1024  # 5 MB — reject huge pages to avoid memory blow-ups
+_HTTPX_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10)
+_CACHE_KEY_RE = re.compile(r"[^a-zA-Z0-9._-]+")
 
 
 async def analyze_site(
@@ -76,7 +79,7 @@ async def analyze_site(
         domain = parsed.netloc
         root = f"{parsed.scheme}://{domain}"
 
-    cache_key = domain
+    cache_key = _sanitize_cache_key(domain)
     if not bypass_cache and cache_ttl > 0:
         cached = _read_cache(cache_key, cache_ttl)
         if cached is not None:
@@ -94,6 +97,7 @@ async def analyze_site(
         headers={"User-Agent": _USER_AGENT},
         follow_redirects=True,
         timeout=httpx.Timeout(15.0, connect=10.0),
+        limits=_HTTPX_LIMITS,
     ) as client:
         if urls:
             # Skip reachability + sitemap — caller vouches for the URLs.
@@ -185,6 +189,20 @@ async def analyze_site(
     return profile
 
 
+def _sanitize_cache_key(domain: str) -> str:
+    """Produce a filesystem-safe filename stem from a domain.
+
+    Protects against path traversal (../foo) and accidental subdirectories if
+    the caller slips in a URL-with-path. Falls back to "unknown" if the domain
+    sanitizes to an empty string.
+    """
+    # Path().name strips any leading directories — `Path("../evil").name == "evil"`.
+    safe = Path(domain).name
+    # Keep only URL-safe characters; replace anything else with `_`.
+    safe = _CACHE_KEY_RE.sub("_", safe).strip("._-")
+    return safe or "unknown"
+
+
 def _read_cache(cache_key: str, ttl: int) -> SiteProfile | None:
     path = _CACHE_DIR / f"{cache_key}.json"
     if not path.exists():
@@ -218,13 +236,38 @@ def _normalize_url(url: str) -> str:
 
 
 def _select_samples(urls: list[str], k: int) -> list[str]:
-    if len(urls) <= k:
+    """Pick `k` URLs from `urls` with even coverage across the list.
+
+    Previous strategy was `head + tail`, which oversampled the newest and
+    oldest posts and skipped the middle 50%. We now stride-sample: always
+    include the first URL, then every (n/k)-th, always ending on the last.
+    This gives a stratified slice across the sitemap (date range) without
+    randomness — still deterministic, good for caching.
+    """
+    n = len(urls)
+    if n <= k:
         return urls
-    # Simple deterministic sampling: take first k/2 + last k/2 to cover
-    # recent + older-but-indexed posts (sitemap ordering is typically by date).
-    head = urls[: k // 2]
-    tail = urls[-(k - len(head)) :]
-    return head + tail
+    if k <= 1:
+        return [urls[0]]
+    step = (n - 1) / (k - 1)
+    picked: list[str] = []
+    seen: set[str] = set()
+    for i in range(k):
+        idx = round(i * step)
+        idx = min(n - 1, max(0, idx))
+        url = urls[idx]
+        if url not in seen:
+            picked.append(url)
+            seen.add(url)
+    # If rounding produced duplicates, backfill with unused URLs in order.
+    if len(picked) < k:
+        for url in urls:
+            if url not in seen:
+                picked.append(url)
+                seen.add(url)
+                if len(picked) == k:
+                    break
+    return picked
 
 
 async def _fetch_many(urls: list[str], client: httpx.AsyncClient) -> list[tuple[str, str | None]]:
@@ -238,7 +281,17 @@ async def _fetch_many(urls: list[str], client: httpx.AsyncClient) -> list[tuple[
                 return (u, None)
             if r.status_code != 200:
                 return (u, None)
-            return (u, r.text)
+            # Reject oversized payloads — trafilatura + selectolax allocate a lot
+            # of memory per HTML page, so we cap at 5 MB.
+            content_length = int(r.headers.get("content-length") or 0)
+            if content_length and content_length > _MAX_RESPONSE_BYTES:
+                logger.warning("analyze_site skip oversized url=%s bytes=%d", u, content_length)
+                return (u, None)
+            text = r.text
+            if len(text.encode("utf-8", errors="ignore")) > _MAX_RESPONSE_BYTES:
+                logger.warning("analyze_site skip oversized url=%s (decoded)", u)
+                return (u, None)
+            return (u, text)
 
     return await asyncio.gather(*[_one(u) for u in urls])
 

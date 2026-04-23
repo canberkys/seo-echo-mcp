@@ -80,3 +80,61 @@ TITLE_VARIANT_TEMPLATES: dict[str, list[str]] = {
     ],
     "statement": ["{Keyword}, Açıkça Anlatıldı", "{Keyword}: Dürüst Rehber"],
 }
+
+SYNTHETIC_H2_VARIANTS: list[str] = [
+    "{Keyword} pratikte",
+    "Gerçek dünyada {Keyword} senaryoları",
+    "Bilmeniz gereken {Keyword} desenleri",
+    "{Keyword} yaparken sık yapılan hatalar",
+    "{Keyword} ipuçları ve püf noktaları",
+    "İleri düzey {Keyword} teknikleri",
+    "{Keyword} için en iyi uygulamalar",
+    "{Keyword} sorunlarında sorun giderme",
+    "Üretim ortamında {Keyword}",
+    "{Keyword} performansını optimize etme",
+    "{Keyword} kullanım senaryoları",
+    "{Keyword} yaklaşımlarını karşılaştırma",
+]
+
+MUST_COVER_INTRO: list[str] = [
+    "{keyword} kavramını tanımla",
+    "Şu an neden önemli olduğu",
+    "Bu yazının kime yönelik olduğu",
+]
+MUST_COVER_CORE: list[str] = [
+    "{keyword} ile ilgili temel kavram",
+    "Pratik uygulama",
+    "Örnek veya vaka",
+]
+MUST_COVER_TOPIC: list[str] = [
+    "{topic} konusunun {keyword} içindeki rolünü açıkla",
+    "Somut örnekler",
+    "Sık karşılaşılan tuzaklar",
+]
+MUST_COVER_SUMMARY: list[str] = [
+    "Ana çıkarımlar",
+    "Okuyucunun atacağı bir sonraki adım",
+]
+
+IMAGE_ALT_TEMPLATES: dict[str, str] = {
+    "filename": "{stem}",
+    "keyword_with_stem": "{keyword} — {stem}",
+    "keyword_with_topic": "{keyword}: {topic}",
+    "topic_only": "{topic}",
+}
+
+H2_STYLE_TEMPLATES: dict[str, str] = {
+    "question": "{base} nedir?",
+    "imperative": "{base} öğren",
+    "statement": "{base}",
+    "mixed": "{base}",
+}
+
+SUMMARY_H2: dict[str, str] = {
+    "question": "Bundan sonra {keyword} ile ne yapmalısınız?",
+    "imperative": "{keyword} pratiğe geçirin",
+    "statement": "{keyword}: ana çıkarımlar",
+    "mixed": "{keyword}: ana çıkarımlar",
+}
+
+TOPIC_CONNECTOR = "ve"

@@ -1,0 +1,34 @@
+# Smithery.ai MCP server manifest.
+# Smithery auto-discovers this file when present at the repo root.
+# Reference: https://smithery.ai/docs/deployments
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      SEO_ECHO_LOG_LEVEL:
+        type: string
+        description: "Log verbosity on stderr (DEBUG / INFO / WARNING / ERROR). Default INFO."
+        default: "INFO"
+      SEO_ECHO_CACHE_DIR:
+        type: string
+        description: "Directory for persistent analyze_site cache. Defaults to ~/.cache/seo-echo-mcp/"
+      GOOGLE_CSE_API_KEY:
+        type: string
+        description: "Optional Google Custom Search API key for analyze_competitors."
+      GOOGLE_CSE_ID:
+        type: string
+        description: "Optional Google Custom Search engine ID, paired with GOOGLE_CSE_API_KEY."
+    additionalProperties: false
+  commandFunction: |
+    (config) => ({
+      command: "uvx",
+      args: ["--from", "git+https://github.com/canberkys/seo-echo-mcp", "seo-echo-mcp"],
+      env: {
+        ...(config.SEO_ECHO_LOG_LEVEL ? { SEO_ECHO_LOG_LEVEL: config.SEO_ECHO_LOG_LEVEL } : {}),
+        ...(config.SEO_ECHO_CACHE_DIR ? { SEO_ECHO_CACHE_DIR: config.SEO_ECHO_CACHE_DIR } : {}),
+        ...(config.GOOGLE_CSE_API_KEY ? { GOOGLE_CSE_API_KEY: config.GOOGLE_CSE_API_KEY } : {}),
+        ...(config.GOOGLE_CSE_ID ? { GOOGLE_CSE_ID: config.GOOGLE_CSE_ID } : {})
+      }
+    })
