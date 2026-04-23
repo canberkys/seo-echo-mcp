@@ -15,10 +15,7 @@ The latest `0.x` minor release is the only supported version. Older 0.x releases
 
 **Please do not open a public GitHub issue for security reports.**
 
-Use one of these channels instead:
-
-- **Preferred:** [Open a private security advisory](https://github.com/canberkys/seo-echo-mcp/security/advisories/new) — only maintainers see it.
-- **Alternative:** email **kayit@canberkki.com** with the subject `[seo-echo-mcp][security]`.
+Use a [private security advisory](https://github.com/canberkys/seo-echo-mcp/security/advisories/new) — only maintainers see it, and GitHub notifies us immediately.
 
 Please include:
 

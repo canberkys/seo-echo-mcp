@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Canberk Kılıçarslan", email = "kayit@canberkki.com" }
+    { name = "Canberk Kılıçarslan", email = "88681802+canberkys@users.noreply.github.com" }
 ]
 keywords = [
     "seo",

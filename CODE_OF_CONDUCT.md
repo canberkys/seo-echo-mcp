@@ -34,7 +34,7 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainer at **kayit@canberkki.com**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainer by opening a [private security advisory](https://github.com/canberkys/seo-echo-mcp/security/advisories/new) (maintainer-only visibility). All reports will be reviewed and investigated promptly and fairly.
 
 ## Attribution
 
