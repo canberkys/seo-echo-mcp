@@ -28,7 +28,7 @@ jobs:
         run: uv run pytest --cov=seo_echo_mcp --cov-report=term-missing --cov-report=xml
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.13'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
