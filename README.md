@@ -7,17 +7,16 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
 [![Test](https://github.com/canberkys/seo-echo-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/canberkys/seo-echo-mcp/actions/workflows/test.yml)
 [![GitHub release](https://img.shields.io/github/v/release/canberkys/seo-echo-mcp)](https://github.com/canberkys/seo-echo-mcp/releases)
-[![codecov](https://codecov.io/gh/canberkys/seo-echo-mcp/graph/badge.svg)](https://codecov.io/gh/canberkys/seo-echo-mcp)
 
-[Features](#features) • [Installation](#installation) • [IDE Setup](#ide-setup) • [API Reference](#api-reference) • [Contributing](#contributing)
+[Features](#features) • [Install](#installation) • [IDE Setup](#ide-setup) • [API](#api-reference) • [Workflow](#workflow) • [Python library](#use-as-a-python-library) • [Troubleshooting](#troubleshooting)
 
 ---
 
 ## What is this?
 
-Most SEO MCPs give you keyword data. **seo-echo-mcp is different:** it reads your existing blog, extracts your writing voice, and makes sure new SEO content matches that voice — in any language.
+`seo-echo-mcp` reads your existing blog, extracts its writing voice and topical footprint, and makes sure new content matches that voice — in any language. It is **not** a keyword-volume tool (use Ahrefs/Semrush for that); it's the layer on top that keeps your LLM-assisted drafts sounding like *you* instead of like generic AI copy.
 
-Think of it as giving your LLM assistant a "style mirror" for your content.
+Think of it as a "style mirror" for your content pipeline.
 
 ## Features
 
@@ -64,7 +63,10 @@ Any `StyleProfile` field can be overridden this way (`em_dash_frequency`, `addre
 
 ## Language support
 
-Works with **any language** that has an ISO 639-1 code. Built-in AI cliché detection for: Turkish, English, Spanish, French, German (contributions welcome for more).
+Works with any language py3langid detects (ISO 639-1). Coverage quality is tiered:
+
+- **Fully localized** (outline templates + FAQ + image alt + synthetic H2 fallbacks + AI-cliché detection + passive voice where applicable): **Turkish, English, Spanish, French, German**.
+- **Generic fallback** (content extraction + style heuristics + slug transliteration work; outline/meta/FAQ templates default to English): every other language. Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Installation
 
@@ -74,7 +76,7 @@ No manual install required — run it straight from GitHub with `uvx`:
 uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
 ```
 
-`uvx` clones + builds on first run, caches afterwards. To pin a specific version append `@v0.4.0` to the git URL. To refresh after a new commit: `uvx --refresh ...`.
+`uvx` clones + builds on first run, caches afterwards.
 
 <details>
 <summary>Other installation methods</summary>
@@ -95,7 +97,7 @@ uv sync --extra dev
 uv run seo-echo-mcp   # stdio server for testing
 ```
 
-**From PyPI:** not published yet. Track [issue #TBD](https://github.com/canberkys/seo-echo-mcp/issues) for PyPI release.
+**From PyPI:** not published yet — [open an issue](https://github.com/canberkys/seo-echo-mcp/issues/new) if you need a PyPI release.
 
 </details>
 
@@ -236,8 +238,7 @@ Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
 
 </details>
 
-> **Tip:** To pin a specific release add `@v0.4.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.4.0`. To pull the latest commit after an update: run `uvx --refresh ...` once, then the IDE caches it again.
-
+> **Pin a release:** append `@v0.4.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.4.0`. To pull the latest after an upgrade, run the IDE's MCP add command once with `uvx --refresh ...`.
 > **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
 ## API Reference
@@ -292,7 +293,7 @@ Per-language formula (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES, generic fall
 **`suggest_image_alts(content_markdown, target_keyword=None, language="en") → ImageAltReport`**
 Flags missing/weak alt text per image and proposes replacements from the filename stem, the target keyword, and the nearest preceding paragraph. Alt template is language-aware.
 
-## Content Creation Workflow with Claude Code
+## Workflow
 
 Because every tool is rule/template-based, the **host LLM (Claude) writes the prose** — the MCP just builds the scaffolding. A single prompt can chain all 14 tools:
 
@@ -317,30 +318,6 @@ Claude will:
 
 You end up with a publishable `.md` that matches your blog's voice, passes SEO checks, and has schema markup ready to paste into `<head>`.
 
-## Usage example — minimal workflow
-
-```
-User:  "Analyze myblog.com, then outline a post about 'async python'."
-
-Assistant (via MCP):
-  1. analyze_site("myblog.com")              → SiteProfile
-  2. analyze_competitors("async python")     → CompetitorAnalysis
-  3. generate_outline(...)                   → Outline
-  4. [Claude writes the draft from outline]
-  5. audit_content(draft, site_profile,
-                   target_keyword=...)       → AuditReport
-```
-
-## Contributing
-
-Contributions welcome.
-
-**Adding a language to AI cliché detection:**
-edit `src/seo_echo_mcp/config/ai_cliches.py`, add your ISO 639-1 language code and a list of phrases, submit a PR.
-
-**Adding outline templates for a new language:**
-create `src/seo_echo_mcp/config/templates/<lang>.py` with `TITLE_TEMPLATES`, `META_TEMPLATES`, `H2_TEMPLATES`, and `CTA`, then add the code to `SUPPORTED` in `templates/loader.py`.
-
 ## Use as a Python library
 
 The tools are plain async functions. You can import them and call them without an MCP host, e.g. from a Django management command, a CI step, or a notebook.
@@ -354,7 +331,6 @@ from seo_echo_mcp.tools.audit_content import audit_content
 async def main():
     profile = await analyze_site("myblog.com", max_samples=8)
     outline = await generate_outline("async python", profile)
-    # (draft would be written by your prose source — LLM, human, template, …)
     draft_md = open("draft.md").read()
     report = await audit_content(draft_md, profile, target_keyword="async python")
     print(report.overall_score, report.recommendations)
@@ -378,21 +354,34 @@ Every tool returns a Pydantic model; call `.model_dump_json()` for JSON or `.mod
 
 **See more detail in IDE logs.** Set `SEO_ECHO_LOG_LEVEL=DEBUG` on the IDE's MCP command; every tool emits start/finish milestones to stderr (stdout is reserved for the MCP stdio protocol).
 
-## What this MCP does NOT do
+## Scope
 
-Expectation management:
+What's in scope:
 
-- **It does not write prose.** Every tool is rule/template-based. The host LLM (Claude / Cursor / etc.) generates the actual text after consuming the outline + skeleton.
-- **It does not call external LLM APIs** from inside any tool. No hidden OpenAI / Anthropic / Gemini calls. No API keys required by default (optional Google CSE only).
-- **It does not store credentials.** The only disk write is an opt-in cache at `~/.cache/seo-echo-mcp/`.
-- **It is not a keyword research tool.** For search volume, SERP CTR, backlinks, etc., integrate a dedicated tool (e.g. Ahrefs, Semrush) — `seo-echo-mcp` focuses on voice + structure.
-- **It is not a plagiarism or fact-checker.** Audit checks style and SEO hygiene; it cannot verify claims.
+- Voice/style profiling of an existing blog
+- Structure & metadata generation (titles, meta, slug, outline, FAQ, schema)
+- Draft scaffolding for a host LLM to fill
+- Post-draft quality checks (SEO audit, readability, image alt coverage)
+
+What's out of scope:
+
+- **Writing prose.** Every tool is rule/template-based. The host LLM (Claude / Cursor / etc.) generates the actual text after consuming the outline + skeleton.
+- **Calling external LLM APIs.** No hidden OpenAI / Anthropic / Gemini calls. No API keys required by default (optional Google CSE only).
+- **Credential storage.** The only disk write is an opt-in cache at `~/.cache/seo-echo-mcp/`.
+- **Keyword research** (search volume, SERP CTR, backlinks). Pair with Ahrefs, Semrush, or similar — `seo-echo-mcp` focuses on voice + structure.
+- **Plagiarism or fact-checking.** Audit checks style and SEO hygiene; it cannot verify claims.
+
+## Contributing
+
+Contributions welcome — especially new languages and new tools. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, style conventions, and step-by-step guides.
+
+Security issues: use a [private security advisory](https://github.com/canberkys/seo-echo-mcp/security/advisories/new). See [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
 - [x] v0.2 — Content creator expansion (9 new tools, 13 total)
 - [x] v0.3 — Manual URL list input for `analyze_site`, persistent cache, `suggest_image_alts`, TR/DE passive voice
-- [x] v0.4 — Language-aware fallbacks (outline + image alts), TR stemmer, stratified sampling, pronoun families, cache path hardening, CONTRIBUTING/SECURITY/CODE_OF_CONDUCT, examples/
+- [x] v0.4 — Language-aware fallbacks, TR stemmer, stratified sampling, pronoun families, cache path hardening, community files, `examples/`
 - [ ] v0.5 — Multi-site profile comparison
 - [ ] v0.5 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
 
