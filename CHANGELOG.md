@@ -13,8 +13,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- Tool count: 14 → **17** (`score_title_clickability`, `analyze_internal_links` added; `check_duplicates` algorithm upgraded).
-- Server instructions updated to reflect 17 tools and new workflow position of both new tools.
+- Tool count: 14 → **16** (`score_title_clickability`, `analyze_internal_links` added; `check_duplicates` algorithm upgraded).
+- Server instructions updated to reflect 16 tools and new workflow position of both new tools.
 - `tests/test_score_title_clickability.py`: 7 tests (new).
 - `tests/test_analyze_internal_links.py`: 7 tests (new).
 

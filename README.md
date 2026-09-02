@@ -1,6 +1,6 @@
 # seo-echo-mcp
 
-**Voice-preserving SEO content MCP server — 17 rule-based tools, 7 languages, no external LLM calls.**
+**Voice-preserving SEO content MCP server — 16 rule-based tools, 7 languages, no external LLM calls.**
 
 [![PyPI](https://img.shields.io/pypi/v/seo-echo-mcp.svg)](https://pypi.org/project/seo-echo-mcp/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)

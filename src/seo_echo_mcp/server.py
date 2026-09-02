@@ -50,7 +50,7 @@ _configure_logging()
 mcp = FastMCP(
     name="seo-echo-mcp",
     instructions=(
-        "Voice-preserving SEO content workflow (17 tools). Typical chain: "
+        "Voice-preserving SEO content workflow (16 tools). Typical chain: "
         "analyze_site → analyze_competitors → detect_content_gaps → check_duplicates → "
         "suggest_titles → score_title_clickability → generate_outline → generate_faq_section → "
         "generate_schema_jsonld → prepare_draft_skeleton → [host LLM fills the skeleton] → "
