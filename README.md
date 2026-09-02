@@ -1,7 +1,8 @@
 # seo-echo-mcp
 
-**Voice-preserving SEO content MCP server — 14 rule-based tools, language-agnostic, no external LLM calls.**
+**Voice-preserving SEO content MCP server — 14 rule-based tools, 6 languages, no external LLM calls.**
 
+[![PyPI](https://img.shields.io/pypi/v/seo-echo-mcp.svg)](https://pypi.org/project/seo-echo-mcp/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
@@ -37,7 +38,7 @@ Think of it as a "style mirror" for your content pipeline.
 |---|---|
 | `suggest_titles` | 10 SEO title candidates, ranked by site voice + competitor format |
 | `generate_meta_variations` | 5 meta descriptions across 5 angles (140-160 chars) |
-| `generate_slug` | URL-safe slug with language-aware transliteration (ı→i, ü→ue, ñ→n…) |
+| `generate_slug` | URL-safe slug with language-aware transliteration (ı→i, ü→ue, ñ→n, à→a…) |
 | `generate_outline` | SEO outline matched to your voice + competitor common H2 topics |
 | `generate_faq_section` | PAA-style FAQ block + FAQPage JSON-LD |
 | `generate_schema_jsonld` | Article / BlogPosting / HowTo / Review JSON-LD |
@@ -48,7 +49,7 @@ Think of it as a "style mirror" for your content pipeline.
 |---|---|
 | `prepare_draft_skeleton` | Full markdown skeleton with frontmatter + `<!-- WRITE -->` directives per section. Host LLM fills and saves the `.md`. |
 | `audit_content` | Scores a draft against your style profile + 16 SEO checks |
-| `readability_report` | Per-language readability (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES, generic fallback) + passive voice (EN/TR/DE) |
+| `readability_report` | Per-language readability score + passive-voice ratio (all 6 languages) + `reading_time_seconds` |
 | `suggest_image_alts` | Flags missing/weak `<img>` alt text and proposes replacements from filename + context |
 
 ### Overriding voice heuristics
@@ -65,28 +66,50 @@ Any `StyleProfile` field can be overridden this way (`em_dash_frequency`, `addre
 
 Works with any language py3langid detects (ISO 639-1). Coverage quality is tiered:
 
-- **Fully localized** (outline templates + FAQ + image alt + synthetic H2 fallbacks + AI-cliché detection + passive voice where applicable): **Turkish, English, Spanish, French, German**.
+- **Fully localized** (outline templates + FAQ + image alt + synthetic H2 fallbacks + AI-cliché detection + passive voice detection + language-calibrated reading time): **English, Turkish, Spanish, French, German, Italian**.
 - **Generic fallback** (content extraction + style heuristics + slug transliteration work; outline/meta/FAQ templates default to English): every other language. Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Readability formulas by language
+
+| Language | Formula | Passive voice |
+|---|---|---|
+| `en` | Flesch Reading Ease | Yes |
+| `tr` | Ateşman (1997) | Yes |
+| `es` | Fernández-Huerta | Yes |
+| `it` | Gulpease (Lucisano & Piemontese 1988) | Yes |
+| `fr` | Generic | Yes |
+| `de` | Generic | Yes |
+| other | Generic | No |
+
+`reading_time_seconds` is calibrated per language: EN 238 wpm, TR 180, DE 179, FR 195, ES 220, IT 200.
 
 ## Installation
 
-No manual install required — run it straight from GitHub with `uvx`:
+### pip / uv (PyPI)
 
 ```bash
-uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
+pip install seo-echo-mcp
+# or with uv:
+uv pip install seo-echo-mcp
 ```
 
-`uvx` clones + builds on first run, caches afterwards.
+### uvx (no install, run directly)
+
+```bash
+uvx seo-echo-mcp
+```
+
+`uvx` downloads and caches on first run, making it ideal for MCP config files.
 
 <details>
 <summary>Other installation methods</summary>
 
-**Persistent pip install (no PyPI):**
+**From GitHub (latest unreleased):**
 
 ```bash
+uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
+# or:
 pip install git+https://github.com/canberkys/seo-echo-mcp
-# or with uv:
-uv pip install git+https://github.com/canberkys/seo-echo-mcp
 ```
 
 **Local clone for development:**
@@ -97,7 +120,7 @@ uv sync --extra dev
 uv run seo-echo-mcp   # stdio server for testing
 ```
 
-**From PyPI:** not published yet — [open an issue](https://github.com/canberkys/seo-echo-mcp/issues/new) if you need a PyPI release.
+**Pin a release:** append `==0.5.0` to the PyPI install, or `@v0.5.0` to the git URL.
 
 </details>
 
@@ -109,7 +132,7 @@ Click the IDE you use to expand setup instructions.
 <summary><b>Claude Code</b></summary>
 
 ```bash
-claude mcp add seo-echo --scope user -- uvx --from git+https://github.com/canberkys/seo-echo-mcp seo-echo-mcp
+claude mcp add seo-echo --scope user -- uvx seo-echo-mcp
 ```
 
 Then in any Claude Code session, type `/mcp` — you should see `seo-echo ✓ Connected`.
@@ -126,11 +149,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
   "mcpServers": {
     "seo-echo": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/canberkys/seo-echo-mcp",
-        "seo-echo-mcp"
-      ]
+      "args": ["seo-echo-mcp"]
     }
   }
 }
@@ -150,11 +169,7 @@ Create `.cursor/mcp.json` in your project root (or `~/.cursor/mcp.json` for a gl
   "mcpServers": {
     "seo-echo": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/canberkys/seo-echo-mcp",
-        "seo-echo-mcp"
-      ]
+      "args": ["seo-echo-mcp"]
     }
   }
 }
@@ -174,11 +189,7 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
   "mcpServers": {
     "seo-echo": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/canberkys/seo-echo-mcp",
-        "seo-echo-mcp"
-      ]
+      "args": ["seo-echo-mcp"]
     }
   }
 }
@@ -198,11 +209,7 @@ Create `.vscode/mcp.json` in your workspace:
   "servers": {
     "seo-echo": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/canberkys/seo-echo-mcp",
-        "seo-echo-mcp"
-      ]
+      "args": ["seo-echo-mcp"]
     }
   }
 }
@@ -223,11 +230,7 @@ Add to `~/.config/zed/settings.json`:
     "seo-echo": {
       "command": {
         "path": "uvx",
-        "args": [
-          "--from",
-          "git+https://github.com/canberkys/seo-echo-mcp",
-          "seo-echo-mcp"
-        ]
+        "args": ["seo-echo-mcp"]
       }
     }
   }
@@ -238,7 +241,6 @@ Reload Zed (`Cmd/Ctrl + Shift + P` → `zed: reload`).
 
 </details>
 
-> **Pin a release:** append `@v0.4.0` (or any tag) to the git URL: `git+https://github.com/canberkys/seo-echo-mcp@v0.4.0`. To pull the latest after an upgrade, run the IDE's MCP add command once with `uvx --refresh ...`.
 > **Verify:** regardless of IDE, try prompting `"analyze_site for myblog.com"` — if the MCP is wired up, your assistant will chain the tools automatically.
 
 ## API Reference
@@ -268,7 +270,7 @@ Jaccard similarity over stopword-filtered tokens (stemmed for TR). Flags existin
 5 meta descriptions across 5 angles (problem-solution, question, benefit, curiosity, action), all 140–160 chars.
 
 **`generate_slug(title, language="en", max_length=60) → SlugResult`**
-URL-safe slug with language-aware transliteration (`ı→i`, `ü→ue`, `ñ→n`, …), plus up to two shorter alternatives (stopword-stripped, truncated).
+URL-safe slug with language-aware transliteration (`ı→i`, `ü→ue`, `ñ→n`, `à→a`, …), plus up to two shorter alternatives (stopword-stripped, truncated).
 
 **`generate_outline(keyword, site_profile, competitor_analysis=None, target_word_count=None, new_category=None) → Outline`**
 5–12 sections with unique H2s (language-specific), 3 title candidates, 3 meta descriptions, internal link targets, citation-research topic stubs. Rule-based. See [`examples/outline.json`](examples/outline.json).
@@ -288,7 +290,16 @@ Assembles the full markdown skeleton (frontmatter + `<!-- WRITE -->` directives 
 16 rule-based checks (word count, H2 format, em-dash, AI clichés, keyword density, heading hierarchy, image alt coverage, …). Score 0–100 with prioritized recommendations. See [`examples/audit_report.json`](examples/audit_report.json).
 
 **`readability_report(content_markdown, language="en") → ReadabilityReport`**
-Per-language formula (Flesch-EN, Ateşman-TR, Fernández-Huerta-ES, generic fallback) + passive-voice ratio for EN/TR/DE.
+Per-language readability score + passive-voice ratio (all 6 fully-localized languages) + `reading_time_seconds`.
+
+| Field | Type | Description |
+|---|---|---|
+| `formula_used` | `str` | `"flesch-en"`, `"atesman-tr"`, `"fernandez-huerta-es"`, `"gulpease-it"`, `"generic"` |
+| `score` | `float` | 0–100; higher = easier to read |
+| `verdict` | `str` | `"easy"` / `"medium"` / `"hard"` |
+| `grade_level` | `float` | Approximate school grade equivalent |
+| `passive_voice_ratio` | `float \| None` | Passive sentences / total sentences; `None` for unsupported languages |
+| `reading_time_seconds` | `int` | `ceil(word_count / WPM * 60)`; language-calibrated WPM table |
 
 **`suggest_image_alts(content_markdown, target_keyword=None, language="en") → ImageAltReport`**
 Flags missing/weak alt text per image and proposes replacements from the filename stem, the target keyword, and the nearest preceding paragraph. Alt template is language-aware.
@@ -313,7 +324,7 @@ Claude will:
 10. **Claude fills every directive** in your voice, respecting word count, addressing ("you"/"sen"/"vous"…), em-dash policy, etc.
 11. Claude saves the filled markdown via its `Write` tool → `content/async-python.md`
 12. `audit_content(draft, site, target_keyword)` → `AuditReport` (score + fixes)
-13. `readability_report(draft, language)` → Flesch/Ateşman/Fernández-Huerta score + passive voice (EN/TR/DE)
+13. `readability_report(draft, language)` → readability score + passive voice ratio + reading time
 14. `suggest_image_alts(draft, target_keyword)` → flags missing/weak alt text and proposes replacements
 
 You end up with a publishable `.md` that matches your blog's voice, passes SEO checks, and has schema markup ready to paste into `<head>`.
@@ -327,13 +338,15 @@ import asyncio
 from seo_echo_mcp.tools.analyze_site import analyze_site
 from seo_echo_mcp.tools.generate_outline import generate_outline
 from seo_echo_mcp.tools.audit_content import audit_content
+from seo_echo_mcp.tools.readability_report import readability_report
 
 async def main():
     profile = await analyze_site("myblog.com", max_samples=8)
     outline = await generate_outline("async python", profile)
     draft_md = open("draft.md").read()
     report = await audit_content(draft_md, profile, target_keyword="async python")
-    print(report.overall_score, report.recommendations)
+    readable = await readability_report(draft_md, language="en")
+    print(report.overall_score, readable.reading_time_seconds)
 
 asyncio.run(main())
 ```
@@ -382,8 +395,9 @@ Security issues: use a [private security advisory](https://github.com/canberkys/
 - [x] v0.2 — Content creator expansion (9 new tools, 13 total)
 - [x] v0.3 — Manual URL list input for `analyze_site`, persistent cache, `suggest_image_alts`, TR/DE passive voice
 - [x] v0.4 — Language-aware fallbacks, TR stemmer, stratified sampling, pronoun families, cache path hardening, community files, `examples/`
-- [ ] v0.5 — Multi-site profile comparison
-- [ ] v0.5 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
+- [x] v0.5 — Italian (Gulpease), FR/ES/IT passive voice, `reading_time_seconds`, PyPI OIDC publishing
+- [ ] v0.6 — Multi-site profile comparison, Portuguese (PT) support
+- [ ] v0.7 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
 
 ## License
 
