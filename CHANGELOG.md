@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.0] — 2026-09-02
+
+### Added
+
+- **`score_title_clickability(titles, keyword, language)` tool** — heuristic CTR scoring for title candidates: power words (7 languages), number presence, question format, SERP-safe length, keyword inclusion, optimal character band. Returns ranked `TitleClickabilityReport` with `signals`, `missing`, and `top_pick`.
+- **`analyze_internal_links(content_markdown, site_profile)` tool** — audits internal linking in a draft: counts internal/external links, identifies which existing posts are already linked, surfaces unlinked opportunities via token overlap, flags H2 sections with no links, computes `link_density_score` (0-100), and returns prioritised recommendations.
+- **TF-IDF cosine similarity in `check_duplicates`** — replaces Jaccard with IDF-weighted cosine so rare/distinctive terms (product names, technical jargon) are upweighted. A single shared rare term now scores higher than many shared common words. All existing tests pass unchanged.
+
+### Changed
+
+- Tool count: 14 → **17** (`score_title_clickability`, `analyze_internal_links` added; `check_duplicates` algorithm upgraded).
+- Server instructions updated to reflect 17 tools and new workflow position of both new tools.
+- `tests/test_score_title_clickability.py`: 7 tests (new).
+- `tests/test_analyze_internal_links.py`: 7 tests (new).
+
+---
+
 ## [0.6.0] — 2026-09-02
 
 ### Added

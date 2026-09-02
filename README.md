@@ -1,6 +1,6 @@
 # seo-echo-mcp
 
-**Voice-preserving SEO content MCP server — 14 rule-based tools, 7 languages, no external LLM calls.**
+**Voice-preserving SEO content MCP server — 17 rule-based tools, 7 languages, no external LLM calls.**
 
 [![PyPI](https://img.shields.io/pypi/v/seo-echo-mcp.svg)](https://pypi.org/project/seo-echo-mcp/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -37,6 +37,7 @@ Think of it as a "style mirror" for your content pipeline.
 | Tool | What it does |
 |---|---|
 | `suggest_titles` | 10 SEO title candidates, ranked by site voice + competitor format |
+| `score_title_clickability` | CTR scoring for title candidates: power words, numbers, length, question format (7 languages) |
 | `generate_meta_variations` | 5 meta descriptions across 5 angles (140-160 chars) |
 | `generate_slug` | URL-safe slug with language-aware transliteration (ı→i, ü→ue, ñ→n, à→a…) |
 | `generate_outline` | SEO outline matched to your voice + competitor common H2 topics |
@@ -49,8 +50,9 @@ Think of it as a "style mirror" for your content pipeline.
 |---|---|
 | `prepare_draft_skeleton` | Full markdown skeleton with frontmatter + `<!-- WRITE -->` directives per section. Host LLM fills and saves the `.md`. |
 | `audit_content` | Scores a draft against your style profile + 16 SEO checks |
-| `readability_report` | Per-language readability score + passive-voice ratio (all 6 languages) + `reading_time_seconds` |
+| `readability_report` | Per-language readability score + passive-voice ratio (all 7 languages) + `reading_time_seconds` |
 | `suggest_image_alts` | Flags missing/weak `<img>` alt text and proposes replacements from filename + context |
+| `analyze_internal_links` | Counts internal/external links, surfaces unlinked post opportunities, flags sections without links |
 
 ### Overriding voice heuristics
 
@@ -398,8 +400,8 @@ Security issues: use a [private security advisory](https://github.com/canberkys/
 - [x] v0.4 — Language-aware fallbacks, TR stemmer, stratified sampling, pronoun families, cache path hardening, community files, `examples/`
 - [x] v0.5 — Italian (Gulpease), FR/ES/IT passive voice, `reading_time_seconds`, PyPI OIDC publishing
 - [x] v0.6 — Portuguese (PT) support, FR Kandel-Moles formula, AI cliché saturation score
-- [ ] v0.7 — Multi-site profile comparison
-- [ ] v0.8 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
+- [x] v0.7 — TF-IDF cosine in `check_duplicates`, `score_title_clickability`, `analyze_internal_links`
+- [ ] v0.8 — Multi-site profile comparison
 
 ## License
 

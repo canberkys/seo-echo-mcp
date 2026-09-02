@@ -314,6 +314,46 @@ class ImageAltReport(BaseModel):
     items: list[ImageAltSuggestion]
 
 
+class TitleClickabilityItem(BaseModel):
+    """Clickability analysis for a single title."""
+
+    title: str
+    score: int  # 0-100
+    serp_safe: bool  # True if len(title) <= 60
+    signals: list[str]  # positive signals found
+    missing: list[str]  # elements that would improve score
+
+
+class TitleClickabilityReport(BaseModel):
+    """Clickability scores for a list of title candidates."""
+
+    keyword: str | None
+    language: str
+    items: list[TitleClickabilityItem]
+    top_pick: str  # title with highest score
+
+
+class InternalLinkOpportunity(BaseModel):
+    """An existing post that could be linked from the draft."""
+
+    existing_url: str
+    existing_title: str
+    relevance_reason: str
+
+
+class InternalLinkReport(BaseModel):
+    """Internal link analysis for a markdown draft."""
+
+    total_links: int
+    internal_links: int
+    external_links: int
+    linked_post_urls: list[str]  # existing posts already linked in the draft
+    unlinked_opportunities: list[InternalLinkOpportunity]
+    sections_without_links: list[str]  # H2 text where no link was found
+    link_density_score: int  # 0-100; higher = better coverage
+    recommendations: list[str]
+
+
 def apply_voice_overrides(site_profile: SiteProfile, overrides: dict | None) -> SiteProfile:
     """Return a copy of `site_profile` with `StyleProfile` fields overridden.
 

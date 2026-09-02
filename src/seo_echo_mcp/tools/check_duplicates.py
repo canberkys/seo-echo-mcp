@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import math
 import re
+from collections import Counter
 from typing import Literal
 
 from seo_echo_mcp.schemas import DuplicateMatch, DuplicateReport, SiteProfile
@@ -93,9 +95,10 @@ async def check_duplicates(
 ) -> DuplicateReport:
     """Detect whether the proposed keyword/title overlaps with existing posts.
 
-    Uses Jaccard similarity over stopword-filtered, optionally stemmed tokens.
-    Any post above `threshold` is flagged; the verdict escalates to "duplicate"
-    at 0.6+.
+    Uses TF-IDF cosine similarity over stopword-filtered, optionally stemmed
+    tokens. Rare/distinctive terms (e.g. product names, technical jargon) are
+    upweighted, so a single shared rare term scores higher than many shared
+    common words — unlike Jaccard which treats all tokens equally.
 
     For Turkish sites, tokens are stemmed with a simple suffix trimmer so
     "snapshot'ları" and "snapshot" collapse to the same token.
@@ -103,7 +106,7 @@ async def check_duplicates(
     Args:
         proposed: Proposed keyword or title for the new piece.
         site_profile: SiteProfile from analyze_site (uses `existing_posts`).
-        threshold: Minimum overlap score to flag (default 0.30 = 30%).
+        threshold: Minimum cosine similarity to flag (default 0.30).
 
     Returns:
         DuplicateReport with matches, scores, and an overall verdict.
@@ -111,23 +114,34 @@ async def check_duplicates(
     if not proposed or not proposed.strip():
         raise ValueError("`proposed` must be a non-empty string.")
     language = site_profile.language
-    proposed_tokens = _tokenize(proposed, language)
     logger.info(
         "check_duplicates proposed=%r lang=%s existing=%d",
         proposed,
         language,
         len(site_profile.existing_posts),
     )
-    if not proposed_tokens:
+
+    # Build corpus: each document is title + snippet tokens (ordered list for TF).
+    corpus_docs: list[list[str]] = []
+    corpus_posts = []
+    for post in site_profile.existing_posts:
+        tokens = _tokenize_list(f"{post.title} {post.snippet}", language)
+        if tokens:
+            corpus_docs.append(tokens)
+            corpus_posts.append(post)
+
+    proposed_tokens = _tokenize_list(proposed, language)
+    if not proposed_tokens or not corpus_docs:
         return DuplicateReport(proposed=proposed, matches=[], verdict="safe")
 
+    # IDF over corpus (sklearn smooth variant: log((N+1)/(df+1))+1).
+    idf = _compute_idf(corpus_docs)
+
+    proposed_vec = _tfidf_vector(proposed_tokens, idf)
     matches: list[DuplicateMatch] = []
-    for post in site_profile.existing_posts:
-        haystack = f"{post.title} {post.snippet}"
-        post_tokens = _tokenize(haystack, language)
-        if not post_tokens:
-            continue
-        score = _jaccard(proposed_tokens, post_tokens)
+    for post, doc_tokens in zip(corpus_posts, corpus_docs):
+        doc_vec = _tfidf_vector(doc_tokens, idf)
+        score = _cosine(proposed_vec, doc_vec)
         if score >= threshold:
             matches.append(
                 DuplicateMatch(
@@ -142,19 +156,45 @@ async def check_duplicates(
     return DuplicateReport(proposed=proposed, matches=matches, verdict=verdict)
 
 
-def _tokenize(text: str, language: str = "en") -> set[str]:
-    # Keep apostrophe-suffixes attached so stem_tr can strip them ('larını, etc.)
+def _tokenize_list(text: str, language: str = "en") -> list[str]:
+    """Return an ordered token list (with repetition) for TF computation."""
     raw = re.findall(r"[\w']{3,}", text.lower())
     stop = _STOP
     if language == "tr":
-        return {stem_tr(t) for t in raw if stem_tr(t) not in stop}
-    return {t for t in raw if t not in stop}
+        return [stem_tr(t) for t in raw if stem_tr(t) not in stop]
+    return [t for t in raw if t not in stop]
 
 
-def _jaccard(a: set[str], b: set[str]) -> float:
+def _tokenize(text: str, language: str = "en") -> set[str]:
+    return set(_tokenize_list(text, language))
+
+
+def _compute_idf(corpus: list[list[str]]) -> dict[str, float]:
+    N = len(corpus)
+    df: dict[str, int] = {}
+    for doc in corpus:
+        for term in set(doc):
+            df[term] = df.get(term, 0) + 1
+    return {term: math.log((N + 1) / (count + 1)) + 1.0 for term, count in df.items()}
+
+
+def _tfidf_vector(tokens: list[str], idf: dict[str, float]) -> dict[str, float]:
+    if not tokens:
+        return {}
+    tf = Counter(tokens)
+    total = len(tokens)
+    return {term: (count / total) * idf.get(term, 1.0) for term, count in tf.items()}
+
+
+def _cosine(a: dict[str, float], b: dict[str, float]) -> float:
     if not a or not b:
         return 0.0
-    return len(a & b) / len(a | b)
+    dot = sum(a.get(t, 0.0) * v for t, v in b.items())
+    mag_a = math.sqrt(sum(v * v for v in a.values()))
+    mag_b = math.sqrt(sum(v * v for v in b.values()))
+    if mag_a == 0.0 or mag_b == 0.0:
+        return 0.0
+    return dot / (mag_a * mag_b)
 
 
 def _reason(score: float) -> str:

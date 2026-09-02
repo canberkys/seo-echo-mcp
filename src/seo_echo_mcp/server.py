@@ -16,6 +16,7 @@ import sys
 from fastmcp import FastMCP
 
 from seo_echo_mcp.tools.analyze_competitors import analyze_competitors
+from seo_echo_mcp.tools.analyze_internal_links import analyze_internal_links
 from seo_echo_mcp.tools.analyze_site import analyze_site
 from seo_echo_mcp.tools.audit_content import audit_content
 from seo_echo_mcp.tools.check_duplicates import check_duplicates
@@ -27,6 +28,7 @@ from seo_echo_mcp.tools.generate_schema_jsonld import generate_schema_jsonld
 from seo_echo_mcp.tools.generate_slug import generate_slug
 from seo_echo_mcp.tools.prepare_draft_skeleton import prepare_draft_skeleton
 from seo_echo_mcp.tools.readability_report import readability_report
+from seo_echo_mcp.tools.score_title_clickability import score_title_clickability
 from seo_echo_mcp.tools.suggest_image_alts import suggest_image_alts
 from seo_echo_mcp.tools.suggest_titles import suggest_titles
 
@@ -48,11 +50,11 @@ _configure_logging()
 mcp = FastMCP(
     name="seo-echo-mcp",
     instructions=(
-        "Voice-preserving SEO content workflow (14 tools). Typical chain: "
+        "Voice-preserving SEO content workflow (17 tools). Typical chain: "
         "analyze_site → analyze_competitors → detect_content_gaps → check_duplicates → "
-        "suggest_titles → generate_outline → generate_faq_section → generate_schema_jsonld → "
-        "prepare_draft_skeleton → [host LLM fills the skeleton and saves the .md] → "
-        "audit_content → readability_report → suggest_image_alts. "
+        "suggest_titles → score_title_clickability → generate_outline → generate_faq_section → "
+        "generate_schema_jsonld → prepare_draft_skeleton → [host LLM fills the skeleton] → "
+        "audit_content → readability_report → suggest_image_alts → analyze_internal_links. "
         "generate_slug and generate_meta_variations are on-demand helpers. "
         "analyze_site supports an explicit `urls` list plus a 24h persistent cache. "
         "No external LLM/API calls are made inside these tools."
@@ -67,6 +69,7 @@ mcp.tool(check_duplicates)
 
 # Structure + metadata
 mcp.tool(suggest_titles)
+mcp.tool(score_title_clickability)
 mcp.tool(generate_meta_variations)
 mcp.tool(generate_slug)
 mcp.tool(generate_outline)
@@ -80,6 +83,7 @@ mcp.tool(prepare_draft_skeleton)
 mcp.tool(audit_content)
 mcp.tool(readability_report)
 mcp.tool(suggest_image_alts)
+mcp.tool(analyze_internal_links)
 
 
 def main() -> None:
