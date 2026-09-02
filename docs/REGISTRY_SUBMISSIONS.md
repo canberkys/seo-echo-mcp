@@ -6,7 +6,7 @@ This doc tracks where `seo-echo-mcp` is listed in public MCP registries and exac
 
 | Registry | State | Notes |
 |----------|-------|-------|
-| [Smithery](https://smithery.ai) | Auto-discoverable | `smithery.yaml` at repo root |
+| [Smithery](https://smithery.ai) | Auto-discoverable | `smithery.yaml` at repo root; updated for v0.7.0 |
 | [Glama](https://glama.ai/mcp) | Auto-discoverable | `glama.json` at repo root; Glama crawls GitHub topics `mcp-server` + `mcp` |
 | [punkpeye/awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) | Needs PR | Add an entry under the right category |
 | [michaellatman/mcp-get](https://github.com/michaellatman/mcp-get) | Needs PR | Add `packages/seo-echo-mcp/` entry |
@@ -19,7 +19,7 @@ This doc tracks where `seo-echo-mcp` is listed in public MCP registries and exac
 3. Add this line alphabetically inside that section:
 
    ```markdown
-   - [seo-echo-mcp](https://github.com/canberkys/seo-echo-mcp) - Voice-preserving SEO content MCP server. 14 rule-based tools for analyzing a blog's voice, generating outlines, FAQ + JSON-LD schema, and auditing drafts. Language-agnostic, no external LLM calls.
+   - [seo-echo-mcp](https://github.com/canberkys/seo-echo-mcp) - Voice-preserving SEO content MCP server. 16 rule-based tools for analyzing a blog's voice, generating outlines, FAQ + JSON-LD schema, auditing drafts, and scoring title CTR. 7 languages (EN/TR/ES/FR/DE/IT/PT), no external LLM calls.
    ```
 
 4. PR title: `Add seo-echo-mcp`
@@ -27,12 +27,13 @@ This doc tracks where `seo-echo-mcp` is listed in public MCP registries and exac
 
    ```markdown
    ### What it is
-   14-tool MCP server for voice-preserving SEO content. Runs in Claude Code / Desktop / Cursor / Windsurf / VS Code / Zed.
+   16-tool MCP server for voice-preserving SEO content. Runs in Claude Code / Desktop / Cursor / Windsurf / VS Code / Zed.
 
    ### Why it's useful
    - Rule/template-based — zero external LLM API calls
-   - Language-agnostic (EN, TR, ES, FR, DE templates ship, others fall back gracefully)
-   - Full pipeline: site analysis → competitor research → outline + FAQ + schema → draft skeleton → audit + readability + image-alt
+   - 7 fully localized languages: EN, TR, ES, FR, DE, IT, PT
+   - Full pipeline: site analysis → competitor research → outline + FAQ + schema → draft skeleton → audit + readability + image-alt + internal link analysis
+   - Available on PyPI: `pip install seo-echo-mcp`
 
    ### License
    MIT
@@ -46,7 +47,7 @@ Format has shifted a few times; check current CONTRIBUTING.md. As of April 2026 
 // packages/seo-echo-mcp/package.ts
 export default {
   name: "seo-echo-mcp",
-  description: "Voice-preserving SEO content MCP — 14 rule-based tools, language-agnostic",
+  description: "Voice-preserving SEO content MCP — 16 rule-based tools, 7 languages (EN/TR/ES/FR/DE/IT/PT)",
   vendor: "canberkys",
   sourceUrl: "https://github.com/canberkys/seo-echo-mcp",
   homepage: "https://github.com/canberkys/seo-echo-mcp",
@@ -54,7 +55,7 @@ export default {
   runtime: "python",
   install: {
     command: "uvx",
-    args: ["--from", "git+https://github.com/canberkys/seo-echo-mcp", "seo-echo-mcp"],
+    args: ["seo-echo-mcp"],
   },
 };
 ```
@@ -66,7 +67,7 @@ PR title: `feat: add seo-echo-mcp`. Body: same as awesome-mcp-servers above.
 - **r/ClaudeAI** — weekly "what did you build" thread
 - **r/LLMDevs** — weekly showcase thread
 - **Hacker News** — "Show HN" submission (one shot, best on weekday mornings ET)
-- **LinkedIn** — personal post with 14-tool diagram + GIF if captured
+- **LinkedIn** — personal post with 16-tool diagram
 - **Twitter/X** — use the 2-3 tweet templates we already prepared
 
 ## After any listing is approved
