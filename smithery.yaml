@@ -24,7 +24,7 @@ startCommand:
   commandFunction: |
     (config) => ({
       command: "uvx",
-      args: ["--from", "git+https://github.com/canberkys/seo-echo-mcp", "seo-echo-mcp"],
+      args: ["seo-echo-mcp"],
       env: {
         ...(config.SEO_ECHO_LOG_LEVEL ? { SEO_ECHO_LOG_LEVEL: config.SEO_ECHO_LOG_LEVEL } : {}),
         ...(config.SEO_ECHO_CACHE_DIR ? { SEO_ECHO_CACHE_DIR: config.SEO_ECHO_CACHE_DIR } : {}),
