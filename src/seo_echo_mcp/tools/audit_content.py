@@ -201,7 +201,8 @@ def _check_em_dash(body: str, sp: SiteProfile) -> Check:
 
 def _check_ai_cliches(plain: str, language: str) -> list[Check]:
     lowered = plain.lower()
-    hits = [phrase for phrase in cliches_for(language) if phrase in lowered]
+    watchlist = cliches_for(language)
+    hits = [phrase for phrase in watchlist if phrase in lowered]
     if not hits:
         return [
             Check(
@@ -213,14 +214,16 @@ def _check_ai_cliches(plain: str, language: str) -> list[Check]:
                 message="No AI clichés detected.",
             )
         ]
+    pct = round(len(hits) / len(watchlist) * 100)
+    severity = "error" if pct >= 30 else "warning"
     return [
         Check(
             name="ai_cliches",
             pass_=False,
-            severity="warning",
+            severity=severity,
             actual=hits[:5],
             expected=0,
-            message=f"AI-cliché phrases detected ({len(hits)}). Rewrite: {', '.join(hits[:3])}…",
+            message=f"AI clichés: {len(hits)}/{len(watchlist)} phrases ({pct}% saturation). Rewrite: {', '.join(hits[:3])}…",
         )
     ]
 

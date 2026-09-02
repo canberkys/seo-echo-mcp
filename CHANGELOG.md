@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.0] — 2026-09-02
+
+### Added
+
+- **Portuguese (PT) language support** — full template module (`pt.py`) with all required exports. AI cliché list (14 phrases), slug transliteration (ã/â/á/à/ç/ê/é/í/õ/ô/ó/ú) and stopwords added for PT.
+- **`flesch-pt` readability formula** — Martins et al. (1996) adaptation of Flesch Reading Ease for Portuguese. `formula_used: "flesch-pt"` returned for `language="pt"`.
+- **Portuguese passive voice detection** (`_PASSIVE_PT`) — ser/estar auxiliary + -ado/-ido past participle pattern. WPM calibrated to 200 for reading-time calculation.
+- **French readability formula** — Kandel & Moles (1958): `209 − 1.15×avg_sw − 68.0×avg_syl`. `formula_used: "kandel-moles-fr"` returned for `language="fr"`, replacing the generic heuristic.
+- **AI cliché saturation score** in `audit_content` — message now reports `N/total phrases (X% saturation)` so writers can see how generic their draft is at a glance. Severity escalates from `warning` to `error` when ≥30% of the watchlist is present.
+- **Smithery + Glama manifests updated** for v0.5.0+: install command switched to `uvx seo-echo-mcp` (PyPI), Italian and multilingual tags added.
+
+### Changed
+
+- Supported language set: EN, TR, DE, FR, ES, IT → **EN, TR, DE, FR, ES, IT, PT**
+- `tests/test_readability.py`: 15 → **18 tests** (FR Kandel-Moles, PT Flesch, PT passive).
+- `tests/test_audit_content.py`: 6 → **7 tests** (AI cliché density assertion).
+
+---
+
 ## [0.5.0] — 2026-09-02
 
 ### Added

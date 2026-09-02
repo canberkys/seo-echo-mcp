@@ -1,7 +1,7 @@
 {
   "$schema": "https://glama.ai/schemas/mcp-server.json",
   "name": "seo-echo-mcp",
-  "description": "Voice-preserving SEO content MCP server for Claude Code, Cursor & Desktop. 14 rule-based tools, 6 languages (EN/TR/ES/FR/DE/IT), no external LLM calls.",
+  "description": "Voice-preserving SEO content MCP server for Claude Code, Cursor & Desktop. 14 rule-based tools, 7 languages (EN/TR/ES/FR/DE/IT/PT), no external LLM calls.",
   "homepage": "https://github.com/canberkys/seo-echo-mcp",
   "repository": "https://github.com/canberkys/seo-echo-mcp",
   "license": "MIT",
@@ -16,6 +16,7 @@
     "writing-tools",
     "multilingual",
     "italian",
+    "portuguese",
     "schema-org",
     "json-ld",
     "readability",

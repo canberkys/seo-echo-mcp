@@ -83,6 +83,22 @@ AI_CLICHES: dict[str, list[str]] = {
         "esplorare a fondo",
         "sbloccare il potenziale",
     ],
+    "pt": [
+        "na era digital",
+        "no mundo atual",
+        "em conclusão",
+        "é importante ressaltar",
+        "aprofundar",
+        "ecossistema",
+        "neste mundo acelerado",
+        "vale a pena notar",
+        "sem dúvida",
+        "no final das contas",
+        "explorar a fundo",
+        "desbloquear o potencial",
+        "de forma abrangente",
+        "navegar pelas complexidades",
+    ],
 }
 
 

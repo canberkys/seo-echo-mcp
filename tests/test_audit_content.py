@@ -66,6 +66,22 @@ async def test_audit_keyword_in_title(site_profile_en):
 
 
 @pytest.mark.asyncio
+async def test_audit_ai_cliche_density_in_message(site_profile_en):
+    draft = (
+        "# Title\n\n"
+        "In today's digital age, in the modern era, it goes without saying that "
+        "navigating the complexities of this landscape is key. "
+        "In conclusion, we must unlock the potential of this realm.\n\n"
+        "## Section\n\nBody text here."
+    )
+    report = await audit_content(draft, site_profile_en)
+    cliche = next(c for c in report.checks if c.name == "ai_cliches")
+    assert cliche.pass_ is False
+    assert "%" in cliche.message
+    assert "saturation" in cliche.message
+
+
+@pytest.mark.asyncio
 async def test_voice_overrides_escalate_em_dash_to_error(site_profile_en):
     # Site profile default is em_dash_frequency='never' in the fixture, but let's
     # simulate a real site where the heuristic measured 'occasional'.

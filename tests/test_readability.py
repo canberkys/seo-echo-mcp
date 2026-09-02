@@ -170,3 +170,33 @@ async def test_readability_reading_time_nonzero():
     draft = "# Title\n\nThis is a short sentence."
     report = await readability_report(draft, language="en")
     assert report.reading_time_seconds >= 1
+
+
+@pytest.mark.asyncio
+async def test_readability_french_uses_kandel_moles():
+    draft = "# Titre\n\nVoici un texte court. Les phrases sont simples. La lecture est facile."
+    report = await readability_report(draft, language="fr")
+    assert report.formula_used == "kandel-moles-fr"
+    assert 0.0 <= report.score
+    assert report.passive_voice_ratio is not None
+
+
+@pytest.mark.asyncio
+async def test_readability_portuguese_uses_flesch_pt():
+    draft = "# Título\n\nEste é um texto curto. As frases são simples. A leitura é fácil."
+    report = await readability_report(draft, language="pt")
+    assert report.formula_used == "flesch-pt"
+    assert 0.0 <= report.score
+    assert report.passive_voice_ratio is not None
+
+
+@pytest.mark.asyncio
+async def test_readability_portuguese_passive_detected():
+    draft = (
+        "# Título\n\n"
+        "O relatório foi assinado pelo diretor. "
+        "Os dados foram analisados e os resultados foram publicados."
+    )
+    report = await readability_report(draft, language="pt")
+    assert report.passive_voice_ratio is not None
+    assert report.passive_voice_ratio > 0

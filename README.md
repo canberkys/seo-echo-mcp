@@ -1,6 +1,6 @@
 # seo-echo-mcp
 
-**Voice-preserving SEO content MCP server — 14 rule-based tools, 6 languages, no external LLM calls.**
+**Voice-preserving SEO content MCP server — 14 rule-based tools, 7 languages, no external LLM calls.**
 
 [![PyPI](https://img.shields.io/pypi/v/seo-echo-mcp.svg)](https://pypi.org/project/seo-echo-mcp/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -66,7 +66,7 @@ Any `StyleProfile` field can be overridden this way (`em_dash_frequency`, `addre
 
 Works with any language py3langid detects (ISO 639-1). Coverage quality is tiered:
 
-- **Fully localized** (outline templates + FAQ + image alt + synthetic H2 fallbacks + AI-cliché detection + passive voice detection + language-calibrated reading time): **English, Turkish, Spanish, French, German, Italian**.
+- **Fully localized** (outline templates + FAQ + image alt + synthetic H2 fallbacks + AI-cliché detection + passive voice detection + language-calibrated reading time): **English, Turkish, Spanish, French, German, Italian, Portuguese**.
 - **Generic fallback** (content extraction + style heuristics + slug transliteration work; outline/meta/FAQ templates default to English): every other language. Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Readability formulas by language
@@ -77,11 +77,12 @@ Works with any language py3langid detects (ISO 639-1). Coverage quality is tiere
 | `tr` | Ateşman (1997) | Yes |
 | `es` | Fernández-Huerta | Yes |
 | `it` | Gulpease (Lucisano & Piemontese 1988) | Yes |
-| `fr` | Generic | Yes |
+| `fr` | Kandel-Moles (1958) | Yes |
+| `pt` | Flesch-PT (Martins et al. 1996) | Yes |
 | `de` | Generic | Yes |
 | other | Generic | No |
 
-`reading_time_seconds` is calibrated per language: EN 238 wpm, TR 180, DE 179, FR 195, ES 220, IT 200.
+`reading_time_seconds` is calibrated per language: EN 238 wpm, TR 180, DE 179, FR 195, ES 220, IT 200, PT 200.
 
 ## Installation
 
@@ -396,8 +397,9 @@ Security issues: use a [private security advisory](https://github.com/canberkys/
 - [x] v0.3 — Manual URL list input for `analyze_site`, persistent cache, `suggest_image_alts`, TR/DE passive voice
 - [x] v0.4 — Language-aware fallbacks, TR stemmer, stratified sampling, pronoun families, cache path hardening, community files, `examples/`
 - [x] v0.5 — Italian (Gulpease), FR/ES/IT passive voice, `reading_time_seconds`, PyPI OIDC publishing
-- [ ] v0.6 — Multi-site profile comparison, Portuguese (PT) support
-- [ ] v0.7 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
+- [x] v0.6 — Portuguese (PT) support, FR Kandel-Moles formula, AI cliché saturation score
+- [ ] v0.7 — Multi-site profile comparison
+- [ ] v0.8 — Semantic similarity in `check_duplicates` (TF-IDF / embeddings)
 
 ## License
 
