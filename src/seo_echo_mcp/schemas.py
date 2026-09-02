@@ -277,6 +277,7 @@ class ReadabilityReport(BaseModel):
     avg_sentence_words: float
     avg_syllables_per_word: float
     passive_voice_ratio: float | None  # None when not computed (non-English)
+    reading_time_seconds: int  # ceil(word_count / language-specific WPM * 60)
 
 
 class DraftSkeleton(BaseModel):

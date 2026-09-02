@@ -69,6 +69,20 @@ AI_CLICHES: dict[str, list[str]] = {
         "eintauchen in",
         "in der schnelllebigen welt",
     ],
+    "it": [
+        "nell'era digitale",
+        "nel mondo di oggi",
+        "in conclusione",
+        "è fondamentale",
+        "approfondire",
+        "ecosistema",
+        "in questo mondo frenetico",
+        "vale la pena notare",
+        "senza dubbio",
+        "in fin dei conti",
+        "esplorare a fondo",
+        "sbloccare il potenziale",
+    ],
 }
 
 

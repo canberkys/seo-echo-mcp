@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] — 2026-09-02
+
+### Added
+
+- **Italian (IT) language support** — full template module (`it.py`) with all required exports: title/meta/H2/FAQ/TITLE_VARIANT templates, synthetic H2 variants, must-cover checklists, image alt templates, CTA, and meta angles. AI cliché list, slug transliteration (à/è/ì/ò/ù) and stopwords added for IT.
+- **Gulpease Index formula** — Italian readability scored with the Lucisano & Piemontese 1988 Gulpease Index (`formula_used: "gulpease-it"`), replacing the generic formula for `language="it"`.
+- **Italian passive voice detection** (`_PASSIVE_IT`) — essere/venire auxiliary + past participle pattern (-ato/-ita/-uto endings).
+- **French passive voice detection** (`_PASSIVE_FR`) — être-family auxiliary + agreeing past participle. `readability_report` now returns a non-null `passive_voice_ratio` for `language="fr"`.
+- **Spanish passive voice detection** (`_PASSIVE_ES`) — ser/estar-family auxiliary + -ado/-ido past participle. `readability_report` now returns a non-null `passive_voice_ratio` for `language="es"`.
+- **`reading_time_seconds` field** on `ReadabilityReport` — `ceil(word_count / WPM * 60)` using language-specific WPM reference values (EN 238, FR 195, ES 220, IT 200, DE 179, TR 180; fallback 200). Available for all 14 tools that call `readability_report`.
+- **PyPI OIDC trusted publishing** — `publish.yml` now triggers automatically on GitHub Release publication in addition to manual `workflow_dispatch`. Requires the `release` environment and a Trusted Publisher entry on PyPI (see README).
+
+### Changed
+
+- Supported language set: EN, TR, DE, FR, ES → **EN, TR, DE, FR, ES, IT**
+- `tests/test_readability.py`: 8 → **15 tests** covering IT Gulpease, IT/FR/ES passive detection, reading-time computation for EN and TR.
+
+---
+
 ## [0.4.0] — 2026-04-23
 
 ### Security

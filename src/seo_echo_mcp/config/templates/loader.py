@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from types import ModuleType
 
-SUPPORTED = ("en", "tr", "es", "fr", "de")
+SUPPORTED = ("en", "tr", "es", "fr", "de", "it")
 
 
 def load(language: str) -> ModuleType:

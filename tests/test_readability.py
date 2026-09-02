@@ -100,3 +100,73 @@ async def test_readability_de_active_low_passive_ratio():
     report = await readability_report(draft, language="de")
     assert report.passive_voice_ratio is not None
     assert report.passive_voice_ratio == 0.0
+
+
+@pytest.mark.asyncio
+async def test_readability_italian_uses_gulpease():
+    draft = "# Titolo\n\nQuesto è un testo breve. Le frasi sono semplici. La lettura è facile."
+    report = await readability_report(draft, language="it")
+    assert report.formula_used == "gulpease-it"
+    assert 0.0 <= report.score <= 100.0
+    assert report.passive_voice_ratio is not None
+
+
+@pytest.mark.asyncio
+async def test_readability_italian_passive_detected():
+    draft = (
+        "# Titolo\n\n"
+        "Il documento è stato firmato e il progetto è stato approvato dal team. "
+        "I dati sono stati analizzati e il rapporto è stato inviato."
+    )
+    report = await readability_report(draft, language="it")
+    assert report.passive_voice_ratio is not None
+    assert report.passive_voice_ratio > 0
+
+
+@pytest.mark.asyncio
+async def test_readability_french_passive_detected():
+    draft = (
+        "# Titre\n\n"
+        "Le rapport est signé par le directeur. "
+        "Les données sont analysées et les résultats sont publiés."
+    )
+    report = await readability_report(draft, language="fr")
+    assert report.passive_voice_ratio is not None
+    assert report.passive_voice_ratio > 0
+
+
+@pytest.mark.asyncio
+async def test_readability_spanish_passive_detected():
+    draft = (
+        "# Título\n\n"
+        "El informe es firmado por el director. "
+        "Los datos son analizados y los resultados son publicados."
+    )
+    report = await readability_report(draft, language="es")
+    assert report.passive_voice_ratio is not None
+    assert report.passive_voice_ratio > 0
+
+
+@pytest.mark.asyncio
+async def test_readability_reading_time_english():
+    # 238 words body + 1 title word = 239 total → ceil(239/238*60) = 61s
+    words = " ".join(["word"] * 238)
+    draft = f"# Title\n\n{words}"
+    report = await readability_report(draft, language="en")
+    assert report.reading_time_seconds == 61
+
+
+@pytest.mark.asyncio
+async def test_readability_reading_time_turkish():
+    # 180 words body + 1 title word = 181 total → ceil(181/180*60) = 61s
+    words = " ".join(["kelime"] * 180)
+    draft = f"# Başlık\n\n{words}"
+    report = await readability_report(draft, language="tr")
+    assert report.reading_time_seconds == 61
+
+
+@pytest.mark.asyncio
+async def test_readability_reading_time_nonzero():
+    draft = "# Title\n\nThis is a short sentence."
+    report = await readability_report(draft, language="en")
+    assert report.reading_time_seconds >= 1

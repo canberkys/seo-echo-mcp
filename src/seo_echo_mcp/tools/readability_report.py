@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import re
 
 from seo_echo_mcp.schemas import ReadabilityReport
@@ -14,6 +15,16 @@ from seo_echo_mcp.utils.text import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Average words-per-minute reading speed per language (academic references).
+_WPM: dict[str, int] = {
+    "en": 238,
+    "tr": 180,
+    "de": 179,
+    "fr": 195,
+    "es": 220,
+    "it": 200,
+}
 
 _PASSIVE_EN = re.compile(
     r"\b(?:am|is|are|was|were|be|been|being)\b\s+\w+(?:ed|en)\b", re.IGNORECASE
@@ -29,6 +40,24 @@ _PASSIVE_TR = re.compile(
 # German passive: werden-family auxiliary + past participle (ge- or -iert endings).
 _PASSIVE_DE = re.compile(
     r"\b(?:wird|werden|wurde|wurden|geworden|worden)\b\s+(?:\w+\s+){0,3}\w*(?:ge\w+|\w+iert)\b",
+    re.IGNORECASE,
+)
+
+# French passive: être-family auxiliary + past participle (agreeing adjective ending).
+_PASSIVE_FR = re.compile(
+    r"\b(?:est|sont|était|étaient|sera|seront|fut|furent)\s+\w+[eé][es]?\b",
+    re.IGNORECASE,
+)
+
+# Spanish passive: ser/estar-family auxiliary + past participle (-ado/-ada/-ido/-ida).
+_PASSIVE_ES = re.compile(
+    r"\b(?:es|son|era|eran|fue|fueron|será|serán|sido)\s+\w+(?:ado|ada|ados|adas|ido|ida|idos|idas)\b",
+    re.IGNORECASE,
+)
+
+# Italian passive: essere/venire auxiliary + past participle (-ato/-ita/-uto endings).
+_PASSIVE_IT = re.compile(
+    r"\b(?:è|sono|era|erano|viene|vengono|fu|furono|sarà|saranno)\s+\w+(?:ato|ata|ati|ate|ito|ita|iti|ite|uto|uta|uti|ute)\b",
     re.IGNORECASE,
 )
 
@@ -70,12 +99,17 @@ async def readability_report(content_markdown: str, language: str = "en") -> Rea
         passive_ratio = passive_hits / sentence_count if sentence_count else 0.0
 
     score, formula, verdict, grade = _score(language, avg_sentence_words, avg_syllables, words)
+
+    wpm = _WPM.get(language, 200)
+    reading_time_seconds = math.ceil(word_count / wpm * 60) if word_count else 0
+
     logger.info(
-        "readability_report formula=%s score=%.1f verdict=%s words=%d",
+        "readability_report formula=%s score=%.1f verdict=%s words=%d reading_time=%ds",
         formula,
         score,
         verdict,
         word_count,
+        reading_time_seconds,
     )
 
     return ReadabilityReport(
@@ -89,6 +123,7 @@ async def readability_report(content_markdown: str, language: str = "en") -> Rea
         avg_sentence_words=round(avg_sentence_words, 2),
         avg_syllables_per_word=round(avg_syllables, 2),
         passive_voice_ratio=round(passive_ratio, 3) if passive_ratio is not None else None,
+        reading_time_seconds=reading_time_seconds,
     )
 
 
@@ -109,6 +144,13 @@ def _score(
         score = 206.84 - 60.0 * avg_syl - 1.02 * avg_sw
         grade = 0.39 * avg_sw + 11.8 * avg_syl - 15.59
         return score, "fernandez-huerta-es", _verdict_flesch(score), grade
+    if language == "it":
+        # Gulpease Index (Lucisano & Piemontese 1988)
+        avg_letters = sum(len(w) for w in words) / max(len(words), 1)
+        score = 89.0 - 10.0 * avg_letters + (300.0 / avg_sw if avg_sw else 0.0)
+        score = max(0.0, min(100.0, score))
+        grade = avg_letters * 0.6 + avg_sw * 0.2
+        return score, "gulpease-it", _verdict_flesch(score), grade
     # Generic: penalize long sentences + long words
     long_word_ratio = sum(1 for w in words if len(w) >= 7) / max(len(words), 1)
     score = max(0.0, 100.0 - avg_sw * 2.0 - long_word_ratio * 100.0)
@@ -128,4 +170,7 @@ _PASSIVE_PATTERNS: dict[str, re.Pattern[str]] = {
     "en": _PASSIVE_EN,
     "tr": _PASSIVE_TR,
     "de": _PASSIVE_DE,
+    "fr": _PASSIVE_FR,
+    "es": _PASSIVE_ES,
+    "it": _PASSIVE_IT,
 }

@@ -42,6 +42,22 @@ TRANSLITERATE: dict[str, dict[str, str]] = {
         "æ": "ae",
         "Æ": "ae",
     },
+    "it": {
+        "à": "a",
+        "À": "a",
+        "è": "e",
+        "È": "e",
+        "é": "e",
+        "É": "e",
+        "ì": "i",
+        "Ì": "i",
+        "î": "i",
+        "Î": "i",
+        "ò": "o",
+        "Ò": "o",
+        "ù": "u",
+        "Ù": "u",
+    },
 }
 
 # Small connector words to optionally drop from slugs to keep them short.
@@ -51,4 +67,5 @@ STOPWORDS: dict[str, set[str]] = {
     "es": {"el", "la", "los", "las", "de", "del", "y", "o", "un", "una", "en"},
     "fr": {"le", "la", "les", "de", "du", "des", "et", "ou", "un", "une", "en", "dans"},
     "de": {"der", "die", "das", "und", "oder", "ein", "eine", "mit", "zu"},
+    "it": {"il", "lo", "la", "le", "gli", "un", "una", "di", "da", "in", "con", "su", "per", "tra", "fra", "e", "o"},
 }
