@@ -7,7 +7,6 @@ import pytest
 from seo_echo_mcp.schemas import PostSample
 from seo_echo_mcp.tools.analyze_internal_links import analyze_internal_links
 
-
 _DRAFT_WITH_LINKS = """# Kubernetes Guide
 
 Learn how to manage your Kubernetes cluster effectively.

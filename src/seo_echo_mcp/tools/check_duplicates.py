@@ -139,7 +139,7 @@ async def check_duplicates(
 
     proposed_vec = _tfidf_vector(proposed_tokens, idf)
     matches: list[DuplicateMatch] = []
-    for post, doc_tokens in zip(corpus_posts, corpus_docs):
+    for post, doc_tokens in zip(corpus_posts, corpus_docs, strict=False):
         doc_vec = _tfidf_vector(doc_tokens, idf)
         score = _cosine(proposed_vec, doc_vec)
         if score >= threshold:
@@ -170,12 +170,12 @@ def _tokenize(text: str, language: str = "en") -> set[str]:
 
 
 def _compute_idf(corpus: list[list[str]]) -> dict[str, float]:
-    N = len(corpus)
+    n = len(corpus)
     df: dict[str, int] = {}
     for doc in corpus:
         for term in set(doc):
             df[term] = df.get(term, 0) + 1
-    return {term: math.log((N + 1) / (count + 1)) + 1.0 for term, count in df.items()}
+    return {term: math.log((n + 1) / (count + 1)) + 1.0 for term, count in df.items()}
 
 
 def _tfidf_vector(tokens: list[str], idf: dict[str, float]) -> dict[str, float]:

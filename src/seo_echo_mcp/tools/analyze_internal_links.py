@@ -115,14 +115,16 @@ async def analyze_internal_links(
     )
 
 
+_LINK_STOPWORDS = {
+    "the", "a", "an", "and", "or", "of", "to", "for", "with", "in", "on",
+    "is", "are", "was", "were", "be", "been", "how", "what", "why", "when",
+    "de", "la", "le", "el", "und", "ve", "bir", "bu", "için",
+}
+
+
 def _tokenize(text: str) -> set[str]:
-    _STOP = {
-        "the", "a", "an", "and", "or", "of", "to", "for", "with", "in", "on",
-        "is", "are", "was", "were", "be", "been", "how", "what", "why", "when",
-        "de", "la", "le", "el", "und", "ve", "bir", "bu", "için",
-    }
     tokens = re.findall(r"[a-zA-ZÀ-ÿĀ-ɏЀ-ӿ]{4,}", text.lower())
-    return {t for t in tokens if t not in _STOP}
+    return {t for t in tokens if t not in _LINK_STOPWORDS}
 
 
 def _get_h2s(body: str) -> list[str]:

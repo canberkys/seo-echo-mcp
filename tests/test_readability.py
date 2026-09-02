@@ -177,7 +177,7 @@ async def test_readability_french_uses_kandel_moles():
     draft = "# Titre\n\nVoici un texte court. Les phrases sont simples. La lecture est facile."
     report = await readability_report(draft, language="fr")
     assert report.formula_used == "kandel-moles-fr"
-    assert 0.0 <= report.score
+    assert report.score >= 0.0
     assert report.passive_voice_ratio is not None
 
 
@@ -186,7 +186,7 @@ async def test_readability_portuguese_uses_flesch_pt():
     draft = "# Título\n\nEste é um texto curto. As frases são simples. A leitura é fácil."
     report = await readability_report(draft, language="pt")
     assert report.formula_used == "flesch-pt"
-    assert 0.0 <= report.score
+    assert report.score >= 0.0
     assert report.passive_voice_ratio is not None
 
 
